@@ -51,7 +51,7 @@ BILLIARD_URL = BILLIARD_GAME_URL or (WEBAPP_URL.rstrip("/") + "/billiard" if WEB
 
 # ---------------------------------------------------------- AI (/ai , /ask) — Grok (xAI)
 GROK_API_KEY = ""                   # <-- apni Grok API key yaha daalo
-GROK_MODEL = ""                     # <-- Grok model name yaha daalo (e.g. grok-...)
+GROK_MODEL = "llama-3.1-8b-instant"                     # <-- Grok model name yaha daalo (e.g. grok-...)
 GROK_BASE_URL = "https://api.x.ai/v1"
 
 # ---------------------------------------------------------- Optional keys
