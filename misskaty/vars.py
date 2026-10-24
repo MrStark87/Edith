@@ -45,8 +45,8 @@ WEBAPP_URL = ""
 
 # ---------------------------------------------------------- Mini App Games (Telegram Web Apps)
 # Full https link daalo. Khali chhodoge to wo game /game me nahi dikhega.
-BILLIARD_GAME_URL = ""              # Pool / Billiard mini app ka link
-SHOOTER_GAME_URL = ""               # Space Shooter mini app ka link
+BILLIARD_GAME_URL = "https://mrstark87.github.io/Pool/"              # Pool / Billiard mini app ka link
+SHOOTER_GAME_URL = "https://mrstark87.github.io/Gamee/"               # Space Shooter mini app ka link
 BILLIARD_URL = BILLIARD_GAME_URL or (WEBAPP_URL.rstrip("/") + "/billiard" if WEBAPP_URL else "")
 
 # ---------------------------------------------------------- AI (/ai , /ask) — Grok (xAI)
