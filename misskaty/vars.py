@@ -1,4 +1,3 @@
-
 # ============================================================
 #  EDITH — Central Config (hardcoded, no .env needed)
 #  Owner : Mister Stark
@@ -10,24 +9,24 @@ from logging import getLogger
 LOGGER = getLogger("Edith")
 
 # ---------------------------------------------------------- Telegram core
-API_ID = 36469348                          # my.telegram.org se
-API_HASH = "0334725d7d237fc177cb798e8b762839"                  # my.telegram.org se
-BOT_TOKEN = "8517374251:AAGGrz6G7adOEb90LsM7KUb6OtpbwZVRL-M"    # @BotFather se
+API_ID = 0                          # my.telegram.org se
+API_HASH = ""                       # my.telegram.org se
+BOT_TOKEN = ""                      # @BotFather se
 USER_SESSION = None                 # optional: pyrogram session string (userbot features)
 
 # ---------------------------------------------------------- Database
-DATABASE_URI = "mongodb+srv://carelessxcoder92:carelessxcoder92@cluster0.1vpnsfz.mongodb.net/?appName=Cluster0"
+DATABASE_URI = ""                   # MongoDB connection string
 DATABASE_NAME = "EdithDB"           # MissKaty-side modules ka database
 EDITH_DB_NAME = "EdithGroupDB"      # Edith group-manager modules ka alag database
 
 # ---------------------------------------------------------- Owner / Sudo
-OWNER_ID = 5864182070                        # Mister Stark ka Telegram user id
-SUDO = [5864182070]               # extra sudo users ke ids is list me daalo
+OWNER_ID = 0                        # Mister Stark ka Telegram user id
+SUDO = [OWNER_ID]                   # extra sudo users ke ids is list me daalo
 OWNER_NAME = "Mister Stark"
 BOT_DISPLAY_NAME = "Edith"
 
 # ---------------------------------------------------------- Logs / Channels
-LOG_CHANNEL = -1003596436416                 # log channel id (-100...)
+LOG_CHANNEL = 0                     # log channel id (-100...)
 LOG_GROUP_ID = None
 SUPPORT_CHAT = "CarelessxWorld"                           # username without @
 SUPPORT_GROUP = "https://t.me/CarelessxWorld"             # support group link
@@ -43,6 +42,12 @@ COMMAND_HANDLER = ["!", "/"]
 AUTO_RESTART = False
 YT_COOKIES = None
 WEBAPP_URL = ""
+
+# ---------------------------------------------------------- Mini App Games (Telegram Web Apps)
+# Full https link daalo. Khali chhodoge to wo game /game me nahi dikhega.
+BILLIARD_GAME_URL = ""              # Pool / Billiard mini app ka link
+SHOOTER_GAME_URL = ""               # Space Shooter mini app ka link
+BILLIARD_URL = BILLIARD_GAME_URL or (WEBAPP_URL.rstrip("/") + "/billiard" if WEBAPP_URL else "")
 
 # ---------------------------------------------------------- AI (/ai , /ask) — Grok (xAI)
 GROK_API_KEY = ""                   # <-- apni Grok API key yaha daalo
