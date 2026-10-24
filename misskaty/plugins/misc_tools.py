@@ -1,0 +1,765 @@
+"""
+* @author        yasir <yasiramunandar@gmail.com>
+* @date          2022-12-01 09:12:27
+* @projectName   MissKatyPyro
+* Copyright @YasirPedia All rights reserved
+"""
+
+import ast
+import asyncio
+import contextlib
+import json
+import operator as op
+import os
+import re
+import sys
+import traceback
+from logging import getLogger
+from urllib.parse import quote, quote_plus
+
+import aiohttp
+import httpx
+from bs4 import BeautifulSoup
+from cachetools import TTLCache
+from gtts import gTTS
+from pyrogram import Client, filters
+from pyrogram import types as pyro_types
+from pyrogram.errors import (
+    ChatAdminRequired,
+    MessageTooLong,
+    QueryIdInvalid,
+    UserNotParticipant,
+)
+from pyrogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
+
+from misskaty import BOT_USERNAME, app
+from misskaty.core.decorator.errors import capture_err
+from misskaty.helper import ddg_search, fetch, gtranslate, gen_trans_image, rentry
+from misskaty.vars import COMMAND_HANDLER
+from misskaty.helper.chat_utils import extract_user_and_name, get_file_id
+from misskaty.ui import buttons as UIB
+
+LOGGER = getLogger("Edith")
+
+# Cache hasil search MDL per message_id -> list[{title, year, slug}],
+# biar callback_data hanya berisi index pendek (slug MDL bisa panjang,
+# melebihi limit 64 byte callback_data Telegram).
+_MDL_CACHE: TTLCache = TTLCache(maxsize=512, ttl=600)
+
+__MODULE__ = "Misc"
+from misskaty.ui.help_texts import HELP_TEXTS  # noqa: E402
+
+__HELP__ = HELP_TEXTS["misc_help"]
+
+
+def remove_html_tags(text):
+    """Remove html tags from a string"""
+
+    clean = re.compile("<.*?>")
+    return re.sub(clean, "", text)
+
+
+def calcExpression(text):
+    text = (text or "").strip().replace("×", "*").replace("÷", "/")
+    if not text:
+        return ""
+
+    allowed_ops = {
+        ast.Add: op.add,
+        ast.Sub: op.sub,
+        ast.Mult: op.mul,
+        ast.Div: op.truediv,
+        ast.Mod: op.mod,
+        ast.Pow: op.pow,
+        ast.USub: op.neg,
+        ast.UAdd: op.pos,
+    }
+
+    def _eval(node):
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return float(node.value)
+        if isinstance(node, ast.Num):
+            return float(node.n)
+        if isinstance(node, ast.BinOp) and type(node.op) in allowed_ops:
+            return allowed_ops[type(node.op)](_eval(node.left), _eval(node.right))
+        if isinstance(node, ast.UnaryOp) and type(node.op) in allowed_ops:
+            return allowed_ops[type(node.op)](_eval(node.operand))
+        raise ValueError("Invalid expression")
+
+    try:
+        tree = ast.parse(text, mode="eval")
+        value = _eval(tree.body)
+        if abs(value - int(value)) < 1e-12:
+            return int(value)
+        return round(value, 10)
+    except (SyntaxError, ZeroDivisionError, ValueError, TypeError):
+        return ""
+    except Exception as e:
+        LOGGER.error(e, exc_info=True)
+        return ""
+
+
+def calc_btn(uid):
+    return UIB.misc_tools__calc_btn_1(uid=uid)
+
+
+@app.on_message(filters.command(["calc", "calculate", "calculator"]))
+async def calculate_handler(self, ctx):
+    if not ctx.from_user:
+        return
+    await ctx.reply_text(
+        text=f"Made by @{self.me.username}",
+        reply_markup=calc_btn(ctx.from_user.id),
+        link_preview_options=pyro_types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@app.on_callback_query(filters.regex("^calc"))
+async def calc_cb(self, query):
+    _, uid, data = query.data.split("|")
+    if query.from_user.id != int(uid):
+        return await query.answer("Who are you??", show_alert=True, cache_time=5)
+    try:
+        current_text = (query.message.text or "").split("\n")[0].strip().split("=")[0].strip()
+        text = "" if f"Made by @{self.me.username}" in current_text else current_text
+        inpt = text + data
+        result = ""
+
+        if data == "=":
+            result = calcExpression(text)
+            text = ""
+        elif data == "DEL":
+            text = text[:-1]
+        elif data == "AC":
+            text = ""
+        else:
+            dot_dot_check = re.findall(r"(\d*\.\.|\d*\.\d+\.)", inpt)
+            opcheck = re.findall(r"([*/\+-]{2,})", inpt)
+            if not dot_dot_check and not opcheck:
+                if re.findall(r"(\.\d+|\d+\.\d+|\d+)", inpt):
+                    text += data
+                    result = calcExpression(text)
+
+        out = f"{text:<50}"
+        if result != "":
+            out += f"\n{result:>50}"
+        out += f"\n\nMade by @{self.me.username}"
+        await query.message.edit(
+            text=out,
+            link_preview_options=pyro_types.LinkPreviewOptions(is_disabled=True),
+            reply_markup=calc_btn(query.from_user.id),
+        )
+    except Exception as error:
+        LOGGER.error(error, exc_info=True)
+        await query.answer("Calculator error", show_alert=True)
+
+
+@app.on_cmd("removebg")
+async def removebg(_, ctx: Client):
+    if not ctx.reply_to_message:
+        return await ctx.reply("Please reply image.")
+    if not ctx.reply_to_message.photo:
+        return await ctx.reply("Only support photo for remove background.")
+    prg = await ctx.reply("Processing...")
+    source = await ctx.reply_to_message.download()
+    await gen_trans_image(source, f"transp_bckgrnd-{ctx.from_user.id}.png")
+    await ctx.reply_document(f"transp_bckgrnd-{ctx.from_user.id}.png")
+    await prg.delete_msg()
+    os.remove(source)
+    os.remove(f"transp_bckgrnd-{ctx.from_user.id}.png")
+
+
+@app.on_cmd("kbbi")
+async def kbbi_search(_, ctx: Client):
+    if len(ctx.command) == 1:
+        return await ctx.reply("Please add keyword to search definition in kbbi")
+    try:
+        r = await fetch.get(f"https://yasirapi.eu.org/kbbi?kata={ctx.input}")
+    except httpx.HTTPError as e:
+        return await ctx.reply(f"HTTP error occured: {e}")
+    if r.status_code != 200:
+        return await ctx.reply("Maaf, makna kata tersebut tidak ditemukan.")
+    parse = r.json()
+    if nomsg := parse.get("detail"):
+        return await ctx.reply(nomsg)
+    kbbi_btn = UIB.misc_tools__kbbi_search_1(parse=parse)
+    res = "<b>Definisi:</b>\n"
+    for _, a in enumerate(parse.get("result"), start=1):
+        submakna = "".join(f"{a}, " for a in a["makna"][0]["submakna"])[:-2]
+        contoh = "".join(f"{a}, " for a in a["makna"][0]["contoh"])[:-2]
+        kt_dasar = "".join(f"{a}, " for a in a["kata_dasar"])[:-2]
+        bt_takbaku = "".join(f"{a}, " for a in a["bentuk_tidak_baku"])[:-2]
+        res += f"<b>{a['nama']} ({a['makna'][0]['kelas'][0]['nama']}: {a['makna'][0]['kelas'][0]['deskripsi']})</b>\n<b>Kata Dasar:</b> {kt_dasar if kt_dasar else '-'}\n<b>Bentuk Tidak Baku:</b> {bt_takbaku if bt_takbaku else '-'}\n<b>Submakna:</b> {submakna}\n<b>Contoh:</b> {contoh if contoh else '-'}\n\n"
+    await ctx.reply(f"{res}<b>By YasirPedia API</b>", reply_markup=kbbi_btn)
+
+
+@app.on_cmd("carbon")
+async def carbon_make(self: Client, ctx: Message):
+    if ctx.reply_to_message and ctx.reply_to_message.text:
+        text = ctx.reply_to_message.text
+    elif ctx.reply_to_message and ctx.reply_to_message.caption:
+        text = ctx.reply_to_message.caption
+    elif len(ctx.command) > 1:
+        text = ctx.input
+    else:
+        return await ctx.reply(
+            "Please reply text to make carbon or add text after command."
+        )
+    json_data = {
+        "code": text,
+        "backgroundColor": "#1F816D",
+    }
+    with contextlib.redirect_stdout(sys.stderr):
+        try:
+            response = await fetch.post(
+                "https://carbon.yasirapi.eu.org/api/cook", json=json_data, timeout=20
+            )
+        except httpx.HTTPError as exc:
+            return await ctx.reply(f"HTTP Exception for {exc.request.url} - {exc}")
+    if response.status_code != 200:
+        return await ctx.reply_photo(
+            f"https://http.cat/{response.status_code}",
+            caption="<b>🤧 Carbon API ERROR</b>",
+        )
+    fname = (
+        f"carbonBY_{ctx.from_user.id if ctx.from_user else ctx.sender_chat.title}.png"
+    )
+    with open(fname, "wb") as e:
+        e.write(response.content)
+    await ctx.reply_photo(fname, caption=f"Generated by @{self.me.username}")
+    os.remove(fname)
+
+
+@app.on_message(filters.command("readqr", COMMAND_HANDLER))
+async def readqr(c, m):
+    if not m.reply_to_message:
+        return await m.reply("Please reply photo that contain valid QR Code.")
+    if not m.reply_to_message.photo:
+        return await m.reply("Please reply photo that contain valid QR Code.")
+    foto = await m.reply_to_message.download()
+    myfile = {"file": (foto, open(foto, "rb"), "application/octet-stream")}
+    url = "http://api.qrserver.com/v1/read-qr-code/"
+    r = await fetch.post(url, files=myfile)
+    os.remove(foto)
+    if res := r.json()[0]["symbol"][0]["data"] is None:
+        return await m.reply(res)
+    await m.reply(
+        f"<b>QR Code Reader by @{c.me.username}:</b> <code>{r.json()[0]['symbol'][0]['data']}</code>",
+    )
+
+
+@app.on_message(filters.command("createqr", COMMAND_HANDLER))
+async def makeqr(c, m):
+    if m.reply_to_message and m.reply_to_message.text:
+        teks = m.reply_to_message.text
+    elif len(m.command) > 1:
+        teks = m.text.split(None, 1)[1]
+    else:
+        return await m.reply(
+            "Please add text after command to convert text -> QR Code."
+        )
+    url = f"https://api.qrserver.com/v1/create-qr-code/?data={quote(teks)}&size=300x300"
+    await m.reply_photo(
+        url, caption=f"<b>QR Code Maker by @{c.me.username}</b>")
+
+
+@app.on_message(filters.command(["sof"], COMMAND_HANDLER))
+@capture_err
+async def stackoverflow(_, message):
+    if len(message.command) == 1:
+        return await message.reply("Give a query to search in StackOverflow!")
+    r = (
+        await fetch.get(
+            f"https://api.stackexchange.com/2.3/search/excerpts?order=asc&sort=relevance&q={message.command[1]}&accepted=True&migrated=False¬ice=False&wiki=False&site=stackoverflow"
+        )
+    ).json()
+    msg = await message.reply("Getting data..")
+    hasil = ""
+    for count, data in enumerate(r["items"], start=1):
+        question = data["question_id"]
+        title = data["title"]
+        snippet = (
+            remove_html_tags(data["excerpt"])[:80].replace("\n", "").replace("    ", "")
+            if len(remove_html_tags(data["excerpt"])) > 80
+            else remove_html_tags(data["excerpt"]).replace("\n", "").replace("    ", "")
+        )
+        hasil += f"{count}. <a href='https://stackoverflow.com/questions/{question}'>{title}</a>\n<code>{snippet}</code>\n"
+    try:
+        await msg.edit(hasil)
+    except MessageTooLong:
+        url = await rentry(hasil)
+        await msg.edit(f"Your text pasted to rentry because has long text:\n{url}")
+    except Exception as e:
+        await msg.edit(e)
+
+
+@app.on_message(filters.command(["google"], COMMAND_HANDLER))
+@capture_err
+async def gsearch(self, message):
+    if len(message.command) == 1:
+        return await message.reply("Give a query to search in Google!")
+    def shorten_text(text):
+        if len(text) > 150:
+            return text[:150] + "..."
+        return text
+    query = message.text.split(maxsplit=1)[1]
+    msg = await message.reply_text(f"**Googling** for `{query}` ...")
+    try:
+        data = await ddg_search(query, max_results=16)
+        if not data:
+            return await msg.edit("No results found.")
+        arr = json.dumps(data, indent=2, ensure_ascii=False)
+        parse = json.loads(arr)
+        total = len(parse)
+        res = "".join(
+            f"<a href='{i['link']}'>{i['title']}</a>\n{i['snippet']}\n\n" for i in parse
+        )
+    except Exception:
+        exc = traceback.format_exc()
+        return await msg.edit(exc)
+    await msg.edit(
+        text=f"<b>Ada {total} Hasil Pencarian dari {query}:</b>\n{res}<b>GoogleSearch by @{BOT_USERNAME}</b>",
+        link_preview_options=pyro_types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@app.on_message(filters.command(["tr", "trans", "translate"], COMMAND_HANDLER))
+@capture_err
+async def translate(_, message):
+    if message.reply_to_message and (
+        message.reply_to_message.text or message.reply_to_message.caption
+    ):
+        target_lang = "id" if len(message.command) == 1 else message.text.split()[1]
+        text = message.reply_to_message.text or message.reply_to_message.caption
+    else:
+        if len(message.command) < 3:
+            return await message.reply(
+                "Berikan Kode bahasa yang valid.\n[Available options](https://tgraph.yasirweb.eu.org/Lang-Codes-11-08).\n<b>Usage:</b> <code>/tr en</code>",
+            )
+        target_lang = message.text.split(None, 2)[1]
+        text = message.text.split(None, 2)[2]
+    msg = await message.reply("Menerjemahkan...")
+    try:
+        my_translator = await gtranslate(text, source="auto", target=target_lang)
+        result = my_translator.text
+        await msg.edit(
+            f"Translation using source = {my_translator.src} and target = {my_translator.dest}\n\n-> {result}"
+        )
+    except MessageTooLong:
+        url = await rentry(result)
+        await msg.edit(
+            f"Your translated text pasted to rentry because has long text:\n{url}"
+        )
+    except Exception as err:
+        await msg.edit(f"Oppss, Error: <code>{str(err)}</code>")
+
+
+@app.on_message(filters.command(["tts"], COMMAND_HANDLER))
+@capture_err
+async def tts_convert(_, message):
+    if message.reply_to_message and (
+        message.reply_to_message.text or message.reply_to_message.caption
+    ):
+        if len(message.text.split()) == 1:
+            target_lang = "id"
+        else:
+            target_lang = message.text.split()[1]
+        text = message.reply_to_message.text or message.reply_to_message.caption
+    else:
+        if len(message.text.split()) <= 2:
+            await message.reply_text(
+                "Berikan Kode bahasa yang valid.\n[Available options](https://telegra.ph/Lang-Codes-11-08).\n*Usage:* /tts en [text]",
+            )
+            return
+        target_lang = message.text.split(None, 2)[1]
+        text = message.text.split(None, 2)[2]
+    msg = await message.reply("Converting to voice...")
+    fname = f"tts_BY_{message.from_user.id if message.from_user else message.sender_chat.title}.mp3"
+    try:
+        tts = gTTS(text, lang=target_lang)
+        tts.save(fname)
+    except ValueError as err:
+        await msg.edit(f"Error: <code>{str(err)}</code>")
+        return
+    await msg.delete()
+    await msg.reply_audio(fname)
+    if os.path.exists(fname):
+        os.remove(fname)
+
+
+@app.on_message(filters.command(["tosticker"], COMMAND_HANDLER))
+@capture_err
+async def tostick(client, message):
+    try:
+        if not message.reply_to_message or not message.reply_to_message.photo:
+            return await message.reply_text("Reply ke foto untuk mengubah ke sticker")
+        sticker = await client.download_media(
+            message.reply_to_message.photo.file_id,
+            f"tostick_{message.from_user.id}.webp",
+        )
+        await message.reply_sticker(sticker)
+        os.remove(sticker)
+    except Exception as e:
+        await message.reply_text(str(e))
+
+
+@app.on_message(filters.command(["id"], COMMAND_HANDLER))
+async def showid(_, message):
+    chat_type = message.chat.type.value
+    if chat_type == "private":
+        user_id = message.chat.id
+        first = message.from_user.first_name
+        last = message.from_user.last_name or ""
+        username = message.from_user.username
+        dc_id = message.from_user.dc_id or ""
+        await message.reply_text(
+            f"<b>➲ First Name:</b> {first}\n<b>➲ Last Name:</b> {last}\n<b>➲ Username:</b> {username}\n<b>➲ Telegram ID:</b> <code>{user_id}</code>\n<b>➲ Data Centre:</b> <code>{dc_id}</code>",
+        )
+
+    elif chat_type in ["group", "supergroup"]:
+        _id = ""
+        _id += "<b>➲ Chat ID</b>: " f"<code>{message.chat.id}</code>\n"
+        if message.reply_to_message:
+            _id += (
+                "<b>➲ User ID</b>: "
+                f"<code>{message.from_user.id if message.from_user else 'Anonymous'}</code>\n"
+                "<b>➲ Replied User ID</b>: "
+                f"<code>{message.reply_to_message.from_user.id if message.reply_to_message.from_user else 'Anonymous'}</code>\n"
+            )
+            file_info = get_file_id(message.reply_to_message)
+        else:
+            _id += (
+                "<b>➲ User ID</b>: "
+                f"<code>{message.from_user.id if message.from_user else 'Anonymous'}</code>\n"
+            )
+            file_info = get_file_id(message)
+        if file_info:
+            _id += (
+                f"<b>{file_info.message_type}</b>: "
+                f"<code>{file_info.file_id}</code>\n"
+            )
+        await message.reply_text(_id)
+
+
+@app.on_message(filters.command(["info"], COMMAND_HANDLER))
+async def who_is(client, message):
+    # https://github.com/SpEcHiDe/PyroGramBot/blob/master/pyrobot/plugins/admemes/whois.py#L19
+    if message.sender_chat:
+        return await message.reply("Not supported channel..")
+    status_message = await message.reply_text("`Fetching user info...`")
+    await status_message.edit("`Processing user info...`")
+    from_user = None
+    from_user_id, _ = extract_user_and_name(message)
+    try:
+        from_user = await client.get_users(from_user_id)
+    except Exception as error:
+        return await status_message.edit(str(error))
+    if from_user is None:
+        return await status_message.edit("No valid user_id / message specified")
+    message_out_str = ""
+    username = f"@{from_user.username}" or "<b>No Username</b>"
+    dc_id = from_user.dc_id or "<i>[User Doesn't Have Profile Pic]</i>"
+    bio = (await client.get_chat(from_user.id)).bio
+    count_pic = await client.get_chat_photos_count(from_user.id)
+    message_out_str += f"<b>🔸 First Name:</b> {from_user.first_name}\n"
+    if last_name := from_user.last_name:
+        message_out_str += f"<b>🔹 Last Name:</b> {last_name}\n"
+    message_out_str += f"<b>🆔 User ID:</b> <code>{from_user.id}</code>\n"
+    message_out_str += f"<b>✴️ User Name:</b> {username}\n"
+    message_out_str += f"<b>💠 Data Centre:</b> <code>{dc_id}</code>\n"
+    if bio:
+        message_out_str += f"<b>👨🏿‍💻 Bio:</b> <code>{bio}</code>\n"
+    message_out_str += f"<b>📸 Pictures:</b> {count_pic}\n"
+    message_out_str += f"<b>🧐 Restricted:</b> {from_user.is_restricted}\n"
+    message_out_str += f"<b>✅ Verified:</b> {from_user.is_verified}\n"
+    message_out_str += f"<b>🌐 Profile Link:</b> <a href='tg://user?id={from_user.id}'><b>Click Here</b></a>\n"
+    if message.chat.type.value in (("supergroup", "channel")):
+        with contextlib.suppress(UserNotParticipant, ChatAdminRequired):
+            chat_member_p = await message.chat.get_member(from_user.id)
+            joined_date = chat_member_p.joined_date
+            message_out_str += (
+                "<b>➲Joined this Chat on:</b> <code>" f"{joined_date}" "</code>\n"
+            )
+    if chat_photo := from_user.photo:
+        local_user_photo = await client.download_media(message=chat_photo.big_file_id)
+        buttons = [
+            [
+                UIB.misc_tools__who_is_1(message=message)
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(buttons)
+        await message.reply_photo(
+            photo=local_user_photo,
+            reply_markup=reply_markup,
+            caption=message_out_str,
+            disable_notification=True,
+        )
+        os.remove(local_user_photo)
+    else:
+        buttons = [
+            [
+                UIB.misc_tools__who_is_2(message=message)
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(buttons)
+        await message.reply_text(
+            text=message_out_str,
+            reply_markup=reply_markup,
+            disable_notification=True,
+        )
+    await status_message.delete_msg()
+
+
+@app.on_callback_query(filters.regex("^close"))
+async def close_callback(_, query: CallbackQuery):
+    _, userid = query.data.split("#")
+    if query.from_user.id != int(userid):
+        with contextlib.suppress(QueryIdInvalid):
+            return await query.answer("⚠️ Access Denied!", True)
+    with contextlib.suppress(Exception):
+        await query.answer("Deleting this message in 5 seconds.")
+        await asyncio.sleep(5)
+        await query.message.delete_msg()
+        await query.message.reply_to_message.delete_msg()
+
+
+# Kuryana mirror yg bisa diakses dari VPS (api asli kena Vercel Security Checkpoint)
+KURYANA_BASE = "https://kuryana.tbdh.app"
+
+
+async def _kuryana_json(path: str) -> dict | None:
+    """Fetch Kuryana mirror API. Return dict atau None kalau gagal/non-JSON."""
+    try:
+        async with aiohttp.ClientSession(
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        ) as ses, ses.get(f"{KURYANA_BASE}{path}") as result:
+            if result.status != 200:
+                return None
+            if "json" not in result.headers.get("Content-Type", ""):
+                return None
+            return await result.json(content_type=None)
+    except Exception:
+        return None
+
+
+async def mdlapi(title):
+    """Cari drama di MyDramaList via Kuryana mirror (lebih lengkap).
+
+    Return list of dict: {title, year, slug, type}. Fallback scrape MDL
+    langsung kalau Kuryana gagal.
+    """
+    kuryana = await _kuryana_json(f"/search/q/{quote_plus(title)}")
+    if kuryana and kuryana.get("results", {}).get("dramas"):
+        return [
+            {
+                "title": m.get("title", ""),
+                "year": m.get("year", ""),
+                "slug": m.get("slug", ""),
+                "type": m.get("type", ""),
+            }
+            for m in kuryana["results"]["dramas"]
+        ]
+
+    # Fallback: scrape search MDL
+    link = f"https://mydramalist.com/search?q={quote_plus(title)}"
+    async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0"}) as ses, ses.get(link) as result:
+        if result.status != 200:
+            raise RuntimeError(f"MDL search gagal: HTTP {result.status}")
+        html = await result.text()
+    soup = BeautifulSoup(html, "lxml")
+    movies = []
+    for row in soup.select(".box-body .row"):
+        a = row.select_one(".title a")
+        href = str(a["href"]) if a and a.get("href") else ""
+        if not a or not href or "/people/" in href:
+            continue
+        content = row.select_one(".content")
+        txt = content.text.strip() if content else ""
+        year_m = re.search(r"(?:19|20)\d{2}", txt)
+        type_m = re.search(r"(Korean|Japanese|Chinese|Taiwanese|Hong Kong|Thai|Filipino) (?:Drama|Movie|Variety)", txt)
+        movies.append(
+            {
+                "title": a.text.strip(),
+                "year": year_m.group(0) if year_m else "",
+                "slug": href.strip("/").split("/")[-1],
+                "type": type_m.group(0) if type_m else "",
+            }
+        )
+    return movies
+
+
+@app.on_message(filters.command(["mdl"], COMMAND_HANDLER))
+@capture_err
+async def mdlsearch(_, message):
+    if " " in message.text:
+        _, title = message.text.split(None, 1)
+        k = await message.reply("Sedang mencari di Database MyDramaList.. 😴")
+        try:
+            movies = await mdlapi(title)
+        except Exception as e:
+            return await k.edit(f"<b>ERROR:</b>\n<code>{e}</code>")
+        if not movies:
+            return await k.edit("Tidak ada hasil ditemukan.. 😕")
+        # Simpan hasil di cache, tombol cukup bawa index pendek (slug bisa >64 byte)
+        _MDL_CACHE[k.id] = movies
+        btn = [
+            [
+                UIB.misc_tools__mdlsearch_1(idx=idx, k=k, message=message, movie=movie)
+            ]
+            for idx, movie in enumerate(movies)
+        ]
+        await k.edit(
+            f"Ditemukan {len(movies)} query dari <code>{title}</code>",
+            reply_markup=InlineKeyboardMarkup(btn),
+        )
+    else:
+        await message.reply("Berikan aku nama drama yang ingin dicari. 🤷🏻‍♂️")
+
+
+@app.on_callback_query(filters.regex("^mdls"))
+async def mdl_callback(_, query: CallbackQuery):
+    _, user, list_msg_id, idx = query.data.split("#")
+    if user == f"{query.from_user.id}":
+        await query.message.edit_text("Permintaan kamu sedang diproses.. ")
+        result = ""
+        try:
+            movies = _MDL_CACHE.get(int(list_msg_id))
+            if not movies or int(idx) >= len(movies):
+                return await query.message.edit_text(
+                    "Hasil pencarian sudah kedaluwarsa / tidak ditemukan. Jalankan /mdl lagi."
+                )
+            slug = movies[int(idx)]["slug"]
+            res = await mdl_detail(slug)
+            result += f"<b>Title:</b> <a href='{res['link']}'>{res['title']}</a>\n"
+            if res.get("aka"):
+                result += f"<b>AKA:</b> <code>{res['aka']}</code>\n\n"
+            result += f"<b>Rating:</b> <code>{res.get('rating', '-')}</code>\n"
+            if res.get("content_rating"):
+                result += f"<b>Content Rating:</b> <code>{res['content_rating']}</code>\n"
+            result += f"<b>Type:</b> <code>{res.get('type', '-')}</code>\n"
+            if res.get("country"):
+                result += f"<b>Country:</b> <code>{res['country']}</code>\n"
+            if res.get("type") == "Movie":
+                if res.get("release_date"):
+                    result += f"<b>Release Date:</b> <code>{res['release_date']}</code>\n"
+            else:
+                if res.get("episodes"):
+                    result += f"<b>Episode:</b> {res['episodes']}\n"
+                if res.get("aired"):
+                    result += f"<b>Aired:</b> <code>{res['aired']}</code>\n"
+                if res.get("aired_on"):
+                    result += f"<b>Aired on:</b> <code>{res['aired_on']}</code>\n"
+                if res.get("original_network"):
+                    result += f"<b>Original Network:</b> <code>{res['original_network']}</code>\n"
+            if res.get("duration"):
+                result += f"<b>Duration:</b> <code>{res['duration']}</code>\n"
+            if res.get("genres"):
+                result += f"<b>Genre:</b> <code>{res['genres']}</code>\n\n"
+            if res.get("synopsis"):
+                result += f"<b>Synopsis:</b> <code>{res['synopsis'][:400]}</code>\n"
+            if res.get("tags"):
+                result += f"<b>Tags:</b> <code>{res['tags'][:200]}</code>\n"
+            btn = UIB.misc_tools__mdl_callback_1(res=res)
+            await query.message.edit_text(result, reply_markup=btn)
+        except Exception as e:
+            await query.message.edit_text(f"<b>ERROR:</b>\n<code>{e}</code>")
+    else:
+        await query.answer("Tombol ini bukan untukmu", show_alert=True)
+
+
+async def mdl_detail(slug: str) -> dict:
+    """Ambil detail drama via Kuryana mirror (lebih lengkap).
+
+    Fallback scrape MDL langsung kalau Kuryana gagal.
+    """
+    link = f"https://mydramalist.com/{slug}"
+
+    kuryana = await _kuryana_json(f"/id/{slug}")
+    if kuryana and kuryana.get("data"):
+        d = kuryana["data"]
+        det = d.get("details", {})
+        oth = d.get("others", {})
+        genre = oth.get("genres", [])
+        if isinstance(genre, list):
+            genre = ", ".join(g for g in genre if g)
+        tag_src = oth.get("tags", [])
+        if isinstance(tag_src, list):
+            tag_src = ", ".join(str(t) for t in tag_src)
+        return {
+            "title": d.get("title", slug),
+            "link": d.get("link", link),
+            "aka": oth.get("also_known_as", ""),
+            "rating": det.get("score", "-"),
+            "content_rating": det.get("content_rating", ""),
+            "type": det.get("type", ""),
+            "country": det.get("country", ""),
+            "episodes": det.get("episodes", ""),
+            "aired": det.get("aired", ""),
+            "aired_on": det.get("aired_on", ""),
+            "original_network": det.get("original_network", ""),
+            "release_date": det.get("release_date", ""),
+            "duration": det.get("duration", ""),
+            "genres": genre,
+            "synopsis": d.get("synopsis", ""),
+            "tags": tag_src,
+        }
+
+    # Fallback: scrape halaman detail MDL
+    async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0"}) as ses, ses.get(link) as result:
+        if result.status != 200:
+            raise RuntimeError(f"MDL detail gagal: HTTP {result.status}")
+        html = await result.text()
+    soup = BeautifulSoup(html, "lxml")
+
+    h1 = soup.select_one("h1")
+    title = h1.text.strip() if h1 else slug
+
+    # Detail rows: <li class="list-item"> berisi <b>Label:</b> value
+    details = {}
+    for li in soup.select("ul.list li.list-item, ul.list li"):
+        txt = li.text.strip()
+        b = li.find("b") or li.find("strong")
+        if b:
+            label = b.text.strip(" :\t\n").lower()
+            value = txt.replace(b.text, "", 1).strip(" :\t\n")
+            details[label] = value
+
+    score_el = soup.select_one(".col-film-rating")
+    rating = score_el.text.strip() if score_el else "-"
+
+    def get(*keys):
+        for k in keys:
+            if k in details:
+                return details[k]
+        return ""
+
+    syn_el = soup.select_one(".show-synopsis") or soup.select_one("#synopsis")
+    synopsis = syn_el.text.strip() if syn_el else ""
+    tags_el = soup.select_one("#tags") or soup.select_one(".tags")
+    tags = tags_el.text.strip() if tags_el else ""
+    if tags and tags.lower().startswith("tags:"):
+        tags = tags[len("tags:"):].strip()
+
+    return {
+        "title": title,
+        "link": link,
+        "aka": get("native title"),
+        "rating": rating,
+        "content_rating": get("content rating"),
+        "type": get("type"),
+        "country": get("country"),
+        "episodes": get("episodes"),
+        "aired": get("airs"),
+        "aired_on": get("airs on"),
+        "original_network": get("original network"),
+        "release_date": get("release date", "release"),
+        "duration": get("duration"),
+        "genres": get("genres"),
+        "synopsis": synopsis,
+        "tags": tags,
+    }

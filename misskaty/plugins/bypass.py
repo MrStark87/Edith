@@ -1,0 +1,121 @@
+"""
+* @author        yasir <yasiramunandar@gmail.com>
+* @date          2022-12-01 09:12:27
+* @lastModified  2022-12-01 09:32:31
+* @projectName   MissKatyPyro
+* Copyright @YasirPedia All rights reserved
+"""
+
+import re
+import urllib.parse
+from urllib.parse import unquote
+
+from pyrogram import enums, filters
+from pyrogram import types as pyro_types
+from pyrogram.errors import EntitiesTooLong, MessageTooLong
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+
+from misskaty import app
+from misskaty.core.decorator.errors import capture_err
+from misskaty.helper import fetch, get_readable_file_size, rentry, resp_get
+from misskaty.vars import COMMAND_HANDLER
+from misskaty.ui import buttons as UIB
+
+LIST_LINK = """
+- Pling and all aliases.
+- Wetransfer
+- Other link soon...
+
+This feature is deprecated..
+"""
+
+__MODULE__ = "Bypass"
+from misskaty.ui.help_texts import HELP_TEXTS  # noqa: E402
+
+__HELP__ = HELP_TEXTS["bypass_help"]
+
+
+# Stopped development for this plugin since always changed time by time.
+async def pling_bypass(url):
+    try:
+        id_url = re.search(r"https?://(store.kde.org|www.pling.com)\/p\/(\d+)", url)[2]
+        link = f"https://www.pling.com/p/{id_url}/loadFiles"
+        res = await fetch.get(link)
+        json_dic_files = res.json().pop("files")
+        msg = f"\n**Source Link** :\n`{url}`\n**Direct Link :**\n"
+        msg += "\n".join(
+            f'**→ [{i["name"]}]({unquote(i["url"])}) ({get_readable_file_size(int(i["size"]))})**'
+            for i in json_dic_files
+        )
+        return msg
+    except Exception as e:
+        return str(e)
+
+
+async def wetransfer_bypass(url: str) -> str:
+    if url.startswith("https://we.tl/"):
+        r = await resp_get(url)
+        url = str(r.url)
+    recipient_id = None
+    params = urllib.parse.urlparse(url).path.split("/")[2:]
+
+    if len(params) == 2:
+        transfer_id, security_hash = params
+    elif len(params) == 3:
+        transfer_id, recipient_id, security_hash = params
+    else:
+        return None
+
+    j = {
+        "intent": "entire_transfer",
+        "security_hash": security_hash,
+    }
+
+    if recipient_id:
+        j["recipient_id"] = recipient_id
+    try:
+        r = await resp_get("https://wetransfer.com/")
+        m = re.search('name="csrf-token" content="([^"]+)"', r.text)
+        if not m:
+            return "ERROR: CSRF token not found in wetransfer.com response."
+        r = await fetch.post(
+            f"https://wetransfer.com/api/v4/transfers/{transfer_id}/download",
+            json=j,
+            headers={
+                "x-csrf-token": m[1],
+                "x-requested-with": "XMLHttpRequest",
+            },
+        )
+        j = r.json()
+        dl_url = j["direct_link"]
+
+        return f"\n**Source Link** :\n`{url}`\n**Direct Link :**\n{dl_url}"
+    except Exception as er:
+        return str(er)
+
+
+@app.on_message(filters.command(["directurl"], COMMAND_HANDLER))
+@capture_err
+async def bypass(_, ctx: Message):
+    if len(ctx.command) == 1:
+        return await ctx.reply(
+            f"Gunakan perintah /{ctx.command[0]} untuk bypass url", del_in=6
+        )
+    url = ctx.command[1]
+    msg = await ctx.reply("Bypassing URL..")
+    mention = f"**Bypasser:** {ctx.from_user.mention} ({ctx.from_user.id})"
+    if re.match(r"https?://(store.kde.org|www.pling.com)\/p\/(\d+)", url):
+        data = await pling_bypass(url)
+        try:
+            await msg.edit(f"{data}\n\n{mention}")
+        except (MessageTooLong, EntitiesTooLong):
+            result = await rentry(data)
+            markup = UIB.bypass__bypass_1(result=result)
+            await msg.edit(
+                f"{result}\n\nBecause your bypassed url is too long, so your link will be pasted to rentry.\n{mention}",
+                reply_markup=markup,
+                link_preview_options=pyro_types.LinkPreviewOptions(is_disabled=True),
+            )
+    else:
+        data = await wetransfer_bypass(url)
+        await msg.edit(f"{data}\n\n{mention}")

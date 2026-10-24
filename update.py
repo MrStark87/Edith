@@ -1,0 +1,83 @@
+import os
+import subprocess
+from logging import INFO, StreamHandler, basicConfig, getLogger, handlers
+from pathlib import Path
+
+import dotenv
+import requests
+from git import Repo
+
+if os.path.exists("EdithLogs.txt"):
+    with open("EdithLogs.txt", "r+") as f:
+        f.truncate(0)
+
+basicConfig(
+    level=INFO,
+    format="[%(levelname)s] - [%(asctime)s - %(name)s - %(message)s] -> [%(module)s:%(lineno)d]",
+    datefmt="%d-%b-%y %H:%M:%S",
+    handlers=[
+        handlers.RotatingFileHandler(
+            "EdithLogs.txt", mode="w+", maxBytes=5242880, backupCount=1
+        ),
+        StreamHandler(),
+    ],
+)
+
+LOGGER = getLogger("MissKaty")
+
+ENV_URL = os.environ.get("ENV_URL")
+try:
+    if len(ENV_URL) == 0:
+        raise TypeError
+    try:
+        res = requests.get(ENV_URL)
+        if res.status_code == 200:
+            with open("config.env", "wb+") as f:
+                f.write(res.content)
+        else:
+            LOGGER.error(f"config.env err: {res.status_code}")
+    except Exception as e:
+        LOGGER.error(f"ENV_URL: {e}")
+except:
+    pass
+
+dotenv.load_dotenv("config.env", override=True)
+
+UPSTREAM_REPO_URL = os.environ.get("UPSTREAM_REPO_URL")
+UPSTREAM_REPO_BRANCH = os.environ.get("UPSTREAM_REPO_BRANCH")
+
+if all([UPSTREAM_REPO_URL, UPSTREAM_REPO_BRANCH]):
+    if os.path.exists(".git"):
+        subprocess.run(["rm", "-rf", ".git"], check=True)
+
+    try:
+        repo = Repo.init()
+        origin = repo.create_remote("upstream", UPSTREAM_REPO_URL)
+        origin.fetch()
+        repo.create_head(UPSTREAM_REPO_BRANCH, origin.refs[UPSTREAM_REPO_BRANCH])
+        repo.heads[UPSTREAM_REPO_BRANCH].set_tracking_branch(
+            origin.refs[UPSTREAM_REPO_BRANCH]
+        )
+        repo.heads[UPSTREAM_REPO_BRANCH].checkout(True)
+        ups_rem = repo.remote("upstream")
+        ups_rem.fetch(UPSTREAM_REPO_BRANCH)
+        LOGGER.info(f"Successfully update with latest branch > {UPSTREAM_REPO_BRANCH}")
+
+        for stale in (
+            "misskaty/plugins/download_upload.py",
+            "misskaty/plugins/igdl_plugin.py",
+        ):
+            if os.path.exists(stale):
+                tracked = subprocess.run(
+                    ["git", "ls-files", "--error-unmatch", stale],
+                    capture_output=True,
+                ).returncode == 0
+                if not tracked:
+                    Path(stale).unlink()
+                    LOGGER.info(f"Removed stale plugin left by old image: {stale}")
+    except Exception as e:
+        LOGGER.error(e)
+else:
+    LOGGER.warning(
+        "UPSTREAM_REPO_URL or UPSTREAM_REPO_BRANCH is not defined, Skipping auto update"
+    )

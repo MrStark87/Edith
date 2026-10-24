@@ -1,0 +1,390 @@
+from pyrogram import types as pyro_types
+import html
+import io
+from asyncio import create_task
+from asyncio import sleep as asleep
+from logging import getLogger
+from typing import Union
+
+from pyrogram.errors import (
+    ChannelPrivate,
+    ChatAdminRequired,
+    ChatSendPlainForbidden,
+    ChatWriteForbidden,
+    FloodWait,
+    MessageAuthorRequired,
+    MessageDeleteForbidden,
+    MessageIdInvalid,
+    MessageNotModified,
+    MessageTooLong,
+    TopicClosed,
+)
+from pyrogram.types import Message
+
+from ..utils.link_preview import normalize_link_preview
+
+LOGGER = getLogger("Edith")
+
+_ORIG_REPLY_TEXT = Message.reply_text
+_ORIG_REPLY = getattr(Message, "reply", None)
+_ORIG_EDIT_TEXT = Message.edit_text
+_ORIG_EDIT = getattr(Message, "edit", None)
+
+
+@property
+def parse_cmd(msg):
+    return msg.text.split(None, 1)[1] if len(msg.command) > 1 else None
+
+
+async def reply_text(
+    self: Message, text: str, as_raw: bool = False, del_in: int = 0, *args, **kwargs
+) -> Union["Message", bool]:
+    """\nExample:
+            message.reply("hello")
+    Parameters:
+        text (``str``):
+            Text of the message to be sent.
+        del_in (``int``):
+            Time in Seconds for delete that message.
+        parse_mode (:obj:`enums.ParseMode`, *optional*):
+            By default, texts are parsed using both
+            Markdown and HTML styles.
+            You can combine both syntaxes together.
+            Pass "markdown" or "md" to enable
+            Markdown-style parsing only.
+            Pass "html" to enable HTML-style parsing only.
+            Pass None to completely disable style parsing.
+        disable_web_page_preview (``bool``, *optional*):
+            Disables link previews for links in this message.
+        disable_notification (``bool``, *optional*):
+            Sends the message silently.
+            Users will receive a notification with no sound.
+        reply_to_message_id (``int``, *optional*):
+            If the message is a reply, ID of the original message.
+        schedule_date (:py:obj:`~datetime.datetime`, *optional*):
+            Date when the message will be automatically sent. Unix time.
+        protect_content (``bool``, *optional*):
+            Protects the contents of the sent message from forwarding and saving.
+        reply_markup (:obj:`InlineKeyboardMarkup`
+        | :obj:`ReplyKeyboardMarkup` | :obj:`ReplyKeyboardRemove`
+        | :obj:`ForceReply`, *optional*):
+            Additional interface options. An object for an inline keyboard,
+            custom reply keyboard,
+            instructions to remove reply keyboard or to
+            force a reply from the user.
+    Returns:
+        On success, the sent Message or True is returned.
+    Raises:
+        RPCError: In case of a Telegram RPC error.
+    """
+    kwargs.pop("quote", None)
+    kwargs.pop("reply_parameters", None)
+    # Kurigram 2.2.x menghapus disable_web_page_preview -> link_preview_options.
+    kwargs = normalize_link_preview(kwargs)
+    try:
+        if as_raw:
+            msg = await _ORIG_REPLY_TEXT(
+                self, text=f"<code>{html.escape(text.html)}</code>", *args, **kwargs
+            )
+        else:
+            msg = await _ORIG_REPLY_TEXT(self, text=text, *args, **kwargs)
+        if del_in == 0:
+            return msg
+        await asleep(del_in)
+        return bool(await msg.delete_msg())
+    except FloodWait as e:
+        LOGGER.warning(f"Got floodwait in {self.chat.id} for {e.value}'s.")
+        await asleep(e.value)
+        return await reply_text(self, text, *args, **kwargs)
+    except (TopicClosed, ChannelPrivate):
+        return
+    except (ChatWriteForbidden, ChatAdminRequired, ChatSendPlainForbidden):
+        LOGGER.info(
+            f"Leaving from {self.chat.title} [{self.chat.id}] because doesn't have enough permission."
+        )
+        return await self.chat.leave()
+
+
+async def edit_text(
+    self, text: str, del_in: int = 0, *args, **kwargs
+) -> Union["Message", bool]:
+    """\nExample:
+            message.edit("hello")
+    Parameters:
+        text (``str``):
+            New text of the message.
+        del_in (``int``):
+            Time in Seconds for delete that message.
+        parse_mode (:obj:`enums.ParseMode`, *optional*):
+            By default, texts are parsed using
+            both Markdown and HTML styles.
+            You can combine both syntaxes together.
+            Pass "markdown" or "md" to enable
+            Markdown-style parsing only.
+            Pass "html" to enable HTML-style parsing only.
+            Pass None to completely disable style parsing.
+        disable_web_page_preview (``bool``, *optional*):
+            Disables link previews for links in this message.
+        reply_markup (:obj:`InlineKeyboardMarkup`, *optional*):
+            An InlineKeyboardMarkup object.
+    Returns:
+        On success, the edited
+        :obj:`Message` or True is returned.
+    Raises:
+        RPCError: In case of a Telegram RPC error.
+    """
+    kwargs = normalize_link_preview(kwargs)
+    try:
+        msg = await _ORIG_EDIT_TEXT(self, text, *args, **kwargs)
+        if del_in == 0:
+            return msg
+        await asleep(del_in)
+        return bool(await msg.delete_msg())
+    except FloodWait as e:
+        LOGGER.warning(f"Got floodwait in {self.chat.id} for {e.value}'s.")
+        await asleep(e.value)
+        return await edit_text(self, text, *args, **kwargs)
+    except (MessageNotModified, ChannelPrivate):
+        return False
+    except (ChatWriteForbidden, ChatAdminRequired):
+        LOGGER.info(
+            f"Leaving from {self.chat.title} [{self.chat.id}] because doesn't have admin permission."
+        )
+        return await self.chat.leave()
+    except (MessageAuthorRequired, MessageIdInvalid):
+        return await reply_text(self, text=text, *args, **kwargs)
+
+
+async def edit_or_send_as_file(
+    self, text: str, del_in: int = 0, as_raw: bool = False, *args, **kwargs
+) -> Union["Message", bool]:
+    """\nThis will first try to message.edit.
+    If it raises MessageTooLong error,
+    run message.send_as_file.
+    Example:
+            message.edit_or_send_as_file("some huge text")
+    Parameters:
+        text (``str``):
+            New text of the message.
+        del_in (``int``):
+            Time in Seconds for delete that message.
+        log (``bool`` | ``str``, *optional*):
+            If ``True``, the message will be forwarded
+            to the log channel.
+            If ``str``, the logger name will be updated.
+        sudo (``bool``, *optional*):
+            If ``True``, sudo users supported.
+        as_raw (``bool``, *optional*):
+            If ``False``, the message will be escaped with current parse mode.
+            default to ``False``.
+        parse_mode (:obj:`enums.ParseMode`, *optional*):
+            By default, texts are parsed using both
+            Markdown and HTML styles.
+            You can combine both syntaxes together.
+            Pass "markdown" or "md" to enable
+            Markdown-style parsing only.
+            Pass "html" to enable HTML-style parsing only.
+            Pass None to completely disable style parsing.
+        disable_web_page_preview (``bool``, *optional*):
+            Disables link previews for links in this message.
+        reply_markup (:obj:`InlineKeyboardMarkup`, *optional*):
+            An InlineKeyboardMarkup object.
+        **kwargs (for message.send_as_file)
+    Returns:
+        On success, the edited
+        :obj:`Message` or True is returned.
+    Raises:
+        RPCError: In case of a Telegram RPC error.
+    """
+    text = html.escape(text.html) if as_raw else text
+    try:
+        msg = await edit_text(self, text=text, *args, **kwargs)
+        if del_in == 0:
+            return msg
+        await asleep(del_in)
+        return bool(await msg.delete_msg())
+    except (MessageTooLong, OSError):
+        return await reply_as_file(self, text=text, *args, **kwargs)
+
+
+async def reply_or_send_as_file(
+    self, text: str, as_raw: bool = False, del_in: int = 0, *args, **kwargs
+) -> Union["Message", bool]:
+    """\nThis will first try to message.reply.
+    If it raise MessageTooLong error,
+    run message.send_as_file.
+    Example:
+            message.reply_or_send_as_file("some huge text")
+    Parameters:
+        text (``str``):
+            Text of the message to be sent.
+        del_in (``int``):
+            Time in Seconds for delete that message.
+        parse_mode (:obj:`enums.ParseMode`, *optional*):
+            By default, texts are parsed using
+            both Markdown and HTML styles.
+            You can combine both syntaxes together.
+            Pass "markdown" or "md" to enable
+            Markdown-style parsing only.
+            Pass "html" to enable HTML-style parsing only.
+            Pass None to completely disable style parsing.
+        disable_web_page_preview (``bool``, *optional*):
+            Disables link previews for links in this message.
+        disable_notification (``bool``, *optional*):
+            Sends the message silently.
+            Users will receive a notification with no sound.
+        reply_to_message_id (``int``, *optional*):
+            If the message is a reply, ID of the
+            original message.
+        reply_markup (:obj:`InlineKeyboardMarkup`
+        | :obj:`ReplyKeyboardMarkup` | :obj:`ReplyKeyboardRemove`
+        | :obj:`ForceReply`, *optional*):
+            Additional interface options. An object for an
+            inline keyboard, custom reply keyboard,
+            instructions to remove reply keyboard
+            or to force a reply from the user.
+        **kwargs (for message.send_as_file)
+    Returns:
+        On success, the sent Message or True is returned.
+    Raises:
+        RPCError: In case of a Telegram RPC error.
+    """
+    text = html.escape(text.html) if as_raw else text
+    try:
+        return await reply_text(self, text=text, del_in=del_in, *args, **kwargs)
+    except MessageTooLong:
+        return await reply_as_file(self, text=text, **kwargs)
+
+
+async def reply_as_file(
+    self,
+    text: str,
+    filename: str = "output.txt",
+    caption: str = "",
+    delete_message: bool = True,
+):
+    """\nYou can send large outputs as file
+    Example:
+        message.reply_as_file(text="hello")
+    Parameters:
+        text (``str``):
+            Text of the message to be sent.
+        filename (``str``, *optional*):
+            file_name for output file.
+        caption (``str``, *optional*):
+            caption for output file.
+        delete_message (``bool``, *optional*):
+            If ``True``, the message will be deleted
+            after sending the file.
+    Returns:
+        On success, the sent Message is returned.
+    """
+    if delete_message:
+        create_task(self.delete())
+    doc = io.BytesIO(text.encode())
+    doc.name = filename
+    return await self.reply_document(
+        document=doc,
+        caption=caption[:1024],
+        disable_notification=True,
+    )
+
+
+async def delete(self, revoke: bool = True) -> bool:
+    """\nThis will first try to delete and ignore
+    it if it raises MessageDeleteForbidden
+    Parameters:
+        revoke (``bool``, *optional*):
+            Deletes messages on both parts.
+            This is only for private cloud chats and normal groups, messages on
+            channels and supergroups are always revoked (i.e.: deleted for everyone).
+            Defaults to True.
+    Returns:
+        True on success, False otherwise.
+    """
+    try:
+        return bool(await self.delete(revoke=revoke))
+    except FloodWait as e:
+        LOGGER.warning(str(e))
+        await asleep(e.value)
+        return await delete(self, revoke)
+    except MessageDeleteForbidden:
+        return False
+    except Exception as e:
+        LOGGER.warning(str(e))
+
+
+async def edit_rich(
+    self: Message,
+    rich_message: pyro_types.InputRichMessage,
+    *args,
+    **kwargs,
+) -> Union["Message", bool, None]:
+    """Edit this message into a rich message (Kurigram InputRichMessage).
+
+    Rich messages are rendered server-side (expandable blocks, <img>,
+    <tg-emoji>, ...). The underlying ``edit_message_text`` of the
+    KurimuzonAkuma/pyrogram fork accepts ``rich_message``, so we can turn
+    an existing plain text message into a rich one *without* having to
+    send a new message and delete the old one.
+
+    Returns:
+        The edited :obj:`Message` on success,
+        ``False`` when the message was not modified,
+        ``None`` when the message no longer exists (caller may fallback).
+    """
+    try:
+        return await self._client.edit_message_text(
+            chat_id=self.chat.id,
+            message_id=self.id,
+            rich_message=rich_message,
+            *args,
+            **kwargs,
+        )
+    except FloodWait as e:
+        LOGGER.warning(f"Got floodwait in {self.chat.id} for {e.value}'s.")
+        await asleep(e.value)
+        return await self._client.edit_message_text(
+            chat_id=self.chat.id,
+            message_id=self.id,
+            rich_message=rich_message,
+            *args,
+            **kwargs,
+        )
+    except (MessageNotModified, ChannelPrivate):
+        return False
+    except (ChatWriteForbidden, ChatAdminRequired):
+        LOGGER.info(
+            f"Leaving from {self.chat.title} [{self.chat.id}] because doesn't have admin permission."
+        )
+        return await self.chat.leave()
+    except (MessageAuthorRequired, MessageIdInvalid):
+        return None
+    except Exception as e:
+        LOGGER.warning(f"edit_rich failed in {self.chat.id}: {e.__class__.__name__}: {e}")
+        return False
+
+
+async def reply(self: Message, text: str, del_in: int = 0, *args, **kwargs):
+    return await reply_text(self, text=text, del_in=del_in, *args, **kwargs)
+
+
+async def edit(self: Message, text: str | None = None, del_in: int = 0, *args, **kwargs):
+    if text is None:
+        if "reply_markup" in kwargs:
+            return await self.edit_reply_markup(kwargs["reply_markup"])
+        return self
+    return await edit_text(self, text=text, del_in=del_in, *args, **kwargs)
+
+
+Message.reply = reply
+Message.reply_text = reply
+Message.edit = edit
+Message.edit_text = edit
+Message.edit_rich = edit_rich
+
+Message.edit_or_send_as_file = edit_or_send_as_file
+Message.reply_or_send_as_file = reply_or_send_as_file
+Message.reply_as_file = reply_as_file
+Message.delete_msg = delete
+Message.input = parse_cmd

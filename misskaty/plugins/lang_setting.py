@@ -1,0 +1,107 @@
+from functools import partial
+from typing import Union
+
+from pyrogram import enums, filters
+from pyrogram.enums import ChatType
+from pyrogram.errors import ListenerTimeout, QueryIdInvalid
+from pyrogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
+
+from database.locale_db import set_db_lang
+from misskaty import app
+from misskaty.vars import COMMAND_HANDLER
+
+from ..core.decorator.permissions import require_admin
+from ..helper.localization import (
+    default_language,
+    get_locale_string,
+    langdict,
+    use_chat_lang,
+)
+from misskaty.ui import buttons as UIB
+
+
+def gen_langs_kb():
+    langs = list(langdict)
+    kb = []
+    while langs:
+        lang = langdict[langs[0]]["main"]
+        a = [
+            UIB.lang_setting__gen_langs_kb_1(lang=lang, langs=langs)
+        ]
+
+        langs.pop(0)
+        if langs:
+            lang = langdict[langs[0]]["main"]
+            a.append(
+                UIB.lang_setting__gen_langs_kb_2(lang=lang, langs=langs)
+            )
+
+            langs.pop(0)
+        kb.append(a)
+    return kb
+
+
+async def apply_language_change(msg: Message, lang: str):
+    await set_db_lang(msg.chat.id, msg.chat.type, lang)
+
+    strings = partial(
+        get_locale_string,
+        langdict[lang].get("lang_setting", langdict[default_language]["lang_setting"]),
+        lang,
+        "lang_setting",
+    )
+
+    if msg.chat.type == ChatType.PRIVATE:
+        keyboard = UIB.lang_setting__apply_language_change_1(strings=strings)
+    else:
+        keyboard = None
+    await msg.edit(strings("language_changed_successfully"), reply_markup=keyboard)
+
+
+@app.on_callback_query(filters.regex("^chlang$"))
+@app.on_message(filters.command(["setchatlang", "setlang"], COMMAND_HANDLER))
+@require_admin(allow_in_private=True)
+@use_chat_lang()
+async def chlang(_, m: Union[CallbackQuery, Message], strings):
+    keyboard = UIB.lang_setting__chlang_1(gen_langs_kb=gen_langs_kb, strings=strings)
+
+    if isinstance(m, CallbackQuery):
+        msg = m.message
+        sender = msg.edit_text
+    else:
+        msg = m
+        sender = msg.reply_text
+        if not msg.from_user:
+            return
+
+    res = (
+        strings("language_changer_private")
+        if msg.chat.type == ChatType.PRIVATE
+        else strings("language_changer_chat")
+    )
+    panel = await sender(res, reply_markup=keyboard)
+
+    try:
+        click = await panel.wait_for_click(from_user_id=m.from_user.id, timeout=30)
+    except ListenerTimeout:
+        return await panel.edit(strings("exp_task", context="general"))
+
+    if not click.data.startswith("setlangsel "):
+        return
+
+    lang = click.data.split()[1]
+    await click.answer(strings("language_changed_successfully"))
+    await apply_language_change(panel, lang)
+
+
+@app.on_callback_query(filters.regex("^setlangsel "))
+async def set_chat_lang_expired(_, m: CallbackQuery):
+    try:
+        await m.answer("Menu language ini sudah expired, buka lagi dengan /setlang.", show_alert=True)
+    except QueryIdInvalid:
+        pass

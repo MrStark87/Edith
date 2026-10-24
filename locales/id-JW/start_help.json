@@ -1,0 +1,11 @@
+{
+    "newgroup_log": "#NewGroup\nGroup = {jdl}(<code>{id}</code>)\nJumlah Anggota = <code>{c}</code>",
+    "newuser_log": "#NewUser\nID - <code>{id}</code>\nJeneng - {nm}",
+    "help_name": "Iki bantuan kanggo **{mod}**:\n",
+    "help_txt": "Halo <emoji id=5303081040464585038>🤗</emoji> {kamuh}, jenengku <b>{bot}</b> <emoji id=5474618190271104037>🐈</emoji>.\nAku bot karo sawetara fitur migunani. Sampeyan isa ngganti basa bot nganggo perintah /setlang, nanging isih tahap beta.\nSampeyan isa milih opsi ing ngisor iki nganggo tombol.",
+    "click_me": "Klik Aku",
+    "back_btn": "Mbalik",
+    "click_btn": "Klik tombol ing ngisor iki kanggo njaluk bantuan babagan {nm}",
+    "pm_detail": "PM Aku Kanggo Rincian Liyane.",
+    "start_msg": "Halo <emoji id=5303081040464585038>🤗</emoji> {kamuh}, PM aku kanggo ngerti kabeh fiture. Sampeyan isa ngganti basa bot nganggo perintah /setlang, nanging isih tahap beta."
+}

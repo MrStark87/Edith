@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MissKaty 8-Ball Pool</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+      -webkit-overflow-scrolling: none;
+    }
+
+    html, body {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 30%, #152219 0%, #080d09 100%);
+      color: #e6f4ea;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Top HUD */
+    header {
+      width: 100%;
+      max-width: 440px;
+      padding: 10px 16px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(14, 26, 18, 0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 10;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #1e7e34;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+      border: 1px solid #48c774;
+    }
+
+    .player-text h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .player-text p {
+      font-size: 11px;
+      color: #8fb89a;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px 10px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      color: #7fa689;
+      display: block;
+    }
+
+    .stat-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: #55ea8d;
+    }
+
+    /* Game Canvas Container */
+    #canvas-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 4px;
+    }
+
+    canvas {
+      display: block;
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+    }
+
+    /* Potted balls tray */
+    #potted-tray {
+      width: 100%;
+      max-width: 440px;
+      padding: 6px 12px;
+      background: rgba(10, 18, 13, 0.85);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 38px;
+      overflow-x: auto;
+    }
+
+    .tray-title {
+      font-size: 11px;
+      color: #7fa689;
+      margin-right: 4px;
+      font-weight: 600;
+    }
+
+    .potted-ball-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* Controls Bar */
+    footer {
+      width: 100%;
+      max-width: 440px;
+      padding: 8px 16px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(14, 26, 18, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      z-index: 10;
+    }
+
+    .power-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      margin-right: 14px;
+    }
+
+    .power-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8fb89a;
+    }
+
+    .power-bar-wrap {
+      flex: 1;
+      height: 12px;
+      background: #09130c;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .power-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #48c774 0%, #ffdd57 70%, #f14668 100%);
+      transition: width 0.05s ease-out;
+      border-radius: 6px;
+    }
+
+    .btn {
+      background: #1a4d2c;
+      border: 1px solid #2f7a49;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+      background: #256b3e;
+    }
+
+    /* Banner Modal for Scratch/Win */
+    #status-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10, 20, 14, 0.92);
+      border: 1px solid #48c774;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #55ea8d;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      text-align: center;
+      z-index: 50;
+    }
+
+    #status-banner.show {
+      opacity: 1;
+    }
+
+    /* Hint text */
+    #hint {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      pointer-events: none;
+      white-space: nowrap;
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="player-info">
+      <div class="avatar" id="player-avatar">🎱</div>
+      <div class="player-text">
+        <h1 id="player-name">Player</h1>
+        <p>Solo Practice</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-box">
+        <span class="stat-label">Potted</span>
+        <span class="stat-val" id="stat-potted">0/9</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">Shots</span>
+        <span class="stat-val" id="stat-shots">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Canvas Container -->
+  <div id="canvas-container">
+    <canvas id="poolCanvas"></canvas>
+    <div id="status-banner">Scratch!</div>
+    <div id="hint">Sentuh & tarik dari bola putih untuk menembak</div>
+  </div>
+
+  <!-- Potted balls tray -->
+  <div id="potted-tray">
+    <span class="tray-title">Balls:</span>
+    <div id="tray-list" style="display: flex; gap: 4px;"></div>
+  </div>
+
+  <!-- Footer Controls -->
+  <footer>
+    <div class="power-container">
+      <span class="power-label">POWER</span>
+      <div class="power-bar-wrap">
+        <div class="power-fill" id="power-fill"></div>
+      </div>
+    </div>
+    <button class="btn" id="btn-rerack" title="Rerack Balls">
+      🔄 Rerack
+    </button>
+  </footer>
+
+  <script>
+    // === Prevent ALL scrolling/bouncing in Telegram WebView ===
+    document.addEventListener("touchmove", function(e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener("gesturestart", function(e) { e.preventDefault(); });
+
+    // === 📱 Telegram Mini App Initialization ===
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        document.getElementById("player-name").textContent = user.first_name || "Player";
+        if (user.first_name) {
+          document.getElementById("player-avatar").textContent = user.first_name[0].toUpperCase();
+        }
+      }
+    }
+
+    function triggerHaptic(type = "light") {
+      try {
+        if (tg?.HapticFeedback) {
+          if (["light", "medium", "heavy", "rigid", "soft"].includes(type)) {
+            tg.HapticFeedback.impactOccurred(type);
+          } else if (["error", "success", "warning"].includes(type)) {
+            tg.HapticFeedback.notificationOccurred(type);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // === 🔊 Synthesized Web Audio Sound Effects ===
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playSound(type, volume = 0.5) {
+      try {
+        const actx = getAudioCtx();
+        const now = actx.currentTime;
+        if (type === "cue_hit") {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+          gain.gain.setValueAtTime(volume * 0.8, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === "ball_hit") {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(200, now + 0.04);
+          gain.gain.setValueAtTime(Math.min(volume, 0.6), now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === "pocket") {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(110, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+          gain.gain.setValueAtTime(0.6, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === "cushion") {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.05);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        }
+      } catch (e) {}
+    }
+
+    // === 🎱 Billiard Simulation & Physics ===
+    const canvas = document.getElementById("poolCanvas");
+    const ctx = canvas.getContext("2d");
+    const container = document.getElementById("canvas-container");
+    const powerFill = document.getElementById("power-fill");
+    const banner = document.getElementById("status-banner");
+    const hintEl = document.getElementById("hint");
+
+    // Table specifications
+    let W = 360;
+    let H = 640;
+    const borderThickness = 24;
+    let innerLeft, innerRight, innerTop, innerBottom;
+    let innerW, innerH;
+
+    const BALL_RADIUS = 9;
+    const POCKET_RADIUS = 18;
+    const FRICTION = 0.985;
+    const MIN_SPEED = 0.08;
+
+    // Ball Colors (Standard 9-Ball)
+    const BALL_DEFS = [
+      { num: 0, color: "#ffffff", stripe: false },
+      { num: 1, color: "#ffd32a", stripe: false },
+      { num: 2, color: "#1e90ff", stripe: false },
+      { num: 3, color: "#ff3838", stripe: false },
+      { num: 4, color: "#8854d0", stripe: false },
+      { num: 5, color: "#fa8231", stripe: false },
+      { num: 6, color: "#20bf6b", stripe: false },
+      { num: 7, color: "#a55eea", stripe: false },
+      { num: 8, color: "#2d3436", stripe: false },
+      { num: 9, color: "#ffd32a", stripe: true  },
+    ];
+
+    let balls = [];
+    let cueBall = null;
+    let pockets = [];
+    let shotsTaken = 0;
+    let ballsPotted = 0;
+    let hintShown = true;
+
+    // ===== SHOOTING STATE =====
+    // Simple drag model: touch down on/near cue ball, drag AWAY to set
+    // aim direction (opposite of drag) and power (drag distance).
+    // The cue ball shoots AWAY from where you drag your finger.
+    let isDragging = false;
+    let dragStart = null;   // canvas coords where touch began {x,y}
+    let dragCur = null;     // current drag position {x,y}
+
+    function resizeCanvas() {
+      const rect = container.getBoundingClientRect();
+      const maxW = Math.min(rect.width - 16, 420);
+      const maxH = rect.height - 12;
+
+      let targetW = maxW;
+      let targetH = targetW * 1.82;
+      if (targetH > maxH) {
+        targetH = maxH;
+        targetW = targetH / 1.82;
+      }
+
+      W = Math.floor(targetW);
+      H = Math.floor(targetH);
+      canvas.width = W;
+      canvas.height = H;
+
+      innerLeft = borderThickness;
+      innerRight = W - borderThickness;
+      innerTop = borderThickness;
+      innerBottom = H - borderThickness;
+      innerW = innerRight - innerLeft;
+      innerH = innerBottom - innerTop;
+
+      setupPockets();
+    }
+
+    function setupPockets() {
+      pockets = [
+        { x: innerLeft + 2, y: innerTop + 2, r: POCKET_RADIUS },
+        { x: innerRight - 2, y: innerTop + 2, r: POCKET_RADIUS },
+        { x: innerLeft - 2, y: H / 2, r: POCKET_RADIUS },
+        { x: innerRight + 2, y: H / 2, r: POCKET_RADIUS },
+        { x: innerLeft + 2, y: innerBottom - 2, r: POCKET_RADIUS },
+        { x: innerRight - 2, y: innerBottom - 2, r: POCKET_RADIUS },
+      ];
+    }
+
+    class Ball {
+      constructor(x, y, def) {
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.r = BALL_RADIUS;
+        this.num = def.num;
+        this.color = def.color;
+        this.stripe = def.stripe;
+        this.potted = false;
+      }
+
+      get speed() { return Math.hypot(this.vx, this.vy); }
+
+      update() {
+        if (this.potted) return;
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        this.vx *= FRICTION;
+        this.vy *= FRICTION;
+        if (this.speed < MIN_SPEED) {
+          this.vx = 0;
+          this.vy = 0;
+        }
+
+        // Cushion bounces
+        if (this.x - this.r < innerLeft) {
+          this.x = innerLeft + this.r;
+          this.vx = Math.abs(this.vx) * 0.82;
+          playSound("cushion"); triggerHaptic("light");
+        } else if (this.x + this.r > innerRight) {
+          this.x = innerRight - this.r;
+          this.vx = -Math.abs(this.vx) * 0.82;
+          playSound("cushion"); triggerHaptic("light");
+        }
+        if (this.y - this.r < innerTop) {
+          this.y = innerTop + this.r;
+          this.vy = Math.abs(this.vy) * 0.82;
+          playSound("cushion"); triggerHaptic("light");
+        } else if (this.y + this.r > innerBottom) {
+          this.y = innerBottom - this.r;
+          this.vy = -Math.abs(this.vy) * 0.82;
+          playSound("cushion"); triggerHaptic("light");
+        }
+
+        // Pocket check
+        for (const p of pockets) {
+          if (Math.hypot(this.x - p.x, this.y - p.y) < p.r) {
+            this.pot();
+            break;
+          }
+        }
+      }
+
+      pot() {
+        this.potted = true;
+        this.vx = 0;
+        this.vy = 0;
+        playSound("pocket");
+        triggerHaptic("heavy");
+
+        if (this.num === 0) {
+          showBanner("Foul! Scratch");
+          setTimeout(resetCueBall, 800);
+        } else {
+          ballsPotted++;
+          updateHUD();
+          addBallToTray(this);
+          if (this.num === 9 || ballsPotted >= 9) {
+            showBanner("🎉 Table Cleared!");
+            triggerHaptic("success");
+          }
+        }
+      }
+
+      draw() {
+        if (this.potted) return;
+
+        ctx.save();
+        // Shadow
+        ctx.beginPath();
+        ctx.arc(this.x + 2, this.y + 2, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+        ctx.fill();
+
+        // Body
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        // Stripe
+        if (this.stripe) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(this.x - this.r, this.y - this.r / 2, this.r * 2, this.r);
+        }
+
+        // Specular
+        const grad = ctx.createRadialGradient(
+          this.x - this.r * 0.35, this.y - this.r * 0.35, 1,
+          this.x, this.y, this.r
+        );
+        grad.addColorStop(0, "rgba(255, 255, 255, 0.65)");
+        grad.addColorStop(0.5, "rgba(255, 255, 255, 0)");
+        grad.addColorStop(1, "rgba(0, 0, 0, 0.4)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Number
+        if (this.num > 0) {
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#111111";
+          ctx.font = `bold ${this.r * 0.65}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(this.num, this.x, this.y + 0.5);
+        }
+        ctx.restore();
+      }
+    }
+
+    function resetCueBall() {
+      if (!cueBall) return;
+      cueBall.potted = false;
+      cueBall.x = W / 2;
+      cueBall.y = innerBottom - innerH * 0.22;
+      cueBall.vx = 0;
+      cueBall.vy = 0;
+    }
+
+    function initGame() {
+      resizeCanvas();
+      balls = [];
+      shotsTaken = 0;
+      ballsPotted = 0;
+      document.getElementById("tray-list").innerHTML = "";
+      updateHUD();
+
+      cueBall = new Ball(W / 2, innerBottom - innerH * 0.22, BALL_DEFS[0]);
+      balls.push(cueBall);
+
+      const apexX = W / 2;
+      const apexY = innerTop + innerH * 0.25;
+      const spacing = BALL_RADIUS * 2 + 0.5;
+
+      const diamondRows = [
+        [1], [2, 3], [4, 9, 5], [6, 7], [8]
+      ];
+
+      diamondRows.forEach((row, rowIdx) => {
+        const rowY = apexY + rowIdx * (spacing * 0.866);
+        const rowStartX = apexX - ((row.length - 1) * spacing) / 2;
+        row.forEach((ballNum, colIdx) => {
+          const ballX = rowStartX + colIdx * spacing;
+          const def = BALL_DEFS.find((d) => d.num === ballNum);
+          if (def) balls.push(new Ball(ballX, rowY, def));
+        });
+      });
+
+      hintShown = true;
+      hintEl.style.opacity = "1";
+    }
+
+    function updateHUD() {
+      document.getElementById("stat-potted").textContent = `${ballsPotted}/9`;
+      document.getElementById("stat-shots").textContent = `${shotsTaken}`;
+    }
+
+    function addBallToTray(ball) {
+      if (ball.num === 0) return;
+      const tray = document.getElementById("tray-list");
+      const el = document.createElement("span");
+      el.className = "potted-ball-icon";
+      el.style.background = ball.color;
+      el.textContent = ball.num;
+      tray.appendChild(el);
+    }
+
+    function showBanner(text) {
+      banner.textContent = text;
+      banner.classList.add("show");
+      setTimeout(() => banner.classList.remove("show"), 1500);
+    }
+
+    function allStopped() {
+      return balls.every((b) => b.potted || (b.vx === 0 && b.vy === 0));
+    }
+
+    function resolveCollisions() {
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const b1 = balls[i];
+          const b2 = balls[j];
+          if (b1.potted || b2.potted) continue;
+
+          const dx = b2.x - b1.x;
+          const dy = b2.y - b1.y;
+          const dist = Math.hypot(dx, dy);
+          const minDist = b1.r + b2.r;
+
+          if (dist < minDist && dist > 0) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // Separate
+            const overlap = minDist - dist;
+            b1.x -= nx * (overlap / 2);
+            b1.y -= ny * (overlap / 2);
+            b2.x += nx * (overlap / 2);
+            b2.y += ny * (overlap / 2);
+
+            // Elastic collision impulse (equal mass)
+            const dvx = b1.vx - b2.vx;
+            const dvy = b1.vy - b2.vy;
+            const dot = dvx * nx + dvy * ny;
+
+            if (dot > 0) {
+              b1.vx -= dot * nx;
+              b1.vy -= dot * ny;
+              b2.vx += dot * nx;
+              b2.vy += dot * ny;
+
+              playSound("ball_hit", Math.min(dot / 10, 0.7));
+              triggerHaptic("light");
+            }
+          }
+        }
+      }
+    }
+
+    // === 🎨 Table Rendering ===
+    function drawTable() {
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.fillStyle = "#2c1808";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#1e1005";
+      ctx.fillRect(4, 4, W - 8, H - 8);
+
+      const feltGrad = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, H / 1.4);
+      feltGrad.addColorStop(0, "#0e6b30");
+      feltGrad.addColorStop(1, "#07481f");
+      ctx.fillStyle = feltGrad;
+      ctx.fillRect(innerLeft, innerTop, innerW, innerH);
+
+      // Head string
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+      ctx.lineWidth = 1;
+      const headY = innerBottom - innerH * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(innerLeft, headY);
+      ctx.lineTo(innerRight, headY);
+      ctx.stroke();
+
+      // Pockets
+      pockets.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = "#050705";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = "#4d3928";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      });
+    }
+
+    // === 🎯 Drag Aim & Cue Stick ===
+    function drawDragAim() {
+      if (!isDragging || !dragStart || !dragCur || cueBall.potted) return;
+
+      const dx = dragCur.x - cueBall.x;
+      const dy = dragCur.y - cueBall.y;
+      const dragDist = Math.hypot(dx, dy);
+
+      if (dragDist < 5) return;
+
+      // Shoot direction = OPPOSITE of drag direction (pull back = shoot forward)
+      const shootAngle = Math.atan2(-dy, -dx);
+      const cos = Math.cos(shootAngle);
+      const sin = Math.sin(shootAngle);
+
+      // Power from drag distance
+      const power = Math.min(dragDist / 12, 22);
+      const powerPct = Math.min(power / 22, 1);
+      powerFill.style.width = `${powerPct * 100}%`;
+
+      // === Trajectory line (in shoot direction) ===
+      let closestDist = 400;
+      let targetHit = null;
+
+      balls.forEach((b) => {
+        if (b === cueBall || b.potted) return;
+        const bx = b.x - cueBall.x;
+        const by = b.y - cueBall.y;
+        const proj = bx * cos + by * sin;
+        if (proj > 0) {
+          const perp = Math.abs(-sin * bx + cos * by);
+          if (perp < BALL_RADIUS * 2) {
+            const hitDist = proj - Math.sqrt(Math.max(0, (BALL_RADIUS * 2) ** 2 - perp ** 2));
+            if (hitDist > 0 && hitDist < closestDist) {
+              closestDist = hitDist;
+              targetHit = b;
+            }
+          }
+        }
+      });
+
+      ctx.save();
+
+      // Laser line
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+      ctx.beginPath();
+      ctx.moveTo(cueBall.x, cueBall.y);
+      ctx.lineTo(cueBall.x + cos * closestDist, cueBall.y + sin * closestDist);
+      ctx.stroke();
+
+      // Ghost ball
+      const ghostX = cueBall.x + cos * closestDist;
+      const ghostY = cueBall.y + sin * closestDist;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(ghostX, ghostY, BALL_RADIUS, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Target ball deflection
+      if (targetHit) {
+        const tnx = targetHit.x - ghostX;
+        const tny = targetHit.y - ghostY;
+        const td = Math.hypot(tnx, tny);
+        if (td > 0) {
+          ctx.strokeStyle = "rgba(255, 211, 42, 0.7)";
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(targetHit.x, targetHit.y);
+          ctx.lineTo(targetHit.x + (tnx / td) * 60, targetHit.y + (tny / td) * 60);
+          ctx.stroke();
+        }
+      }
+
+      // === Cue Stick (on the drag side, i.e. behind the cue ball) ===
+      ctx.setLineDash([]);
+      const stickGap = BALL_RADIUS + 6 + powerPct * 40; // pulls back with power
+      const stickLen = 160;
+      // Stick points from cue ball towards drag direction (opposite of shoot)
+      const stickAngle = Math.atan2(dy, dx);
+      const sc = Math.cos(stickAngle);
+      const ss = Math.sin(stickAngle);
+      const stickStartX = cueBall.x + sc * stickGap;
+      const stickStartY = cueBall.y + ss * stickGap;
+      const stickEndX = cueBall.x + sc * (stickGap + stickLen);
+      const stickEndY = cueBall.y + ss * (stickGap + stickLen);
+
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = "round";
+      const stickGrad = ctx.createLinearGradient(stickStartX, stickStartY, stickEndX, stickEndY);
+      stickGrad.addColorStop(0, "#d2b48c");
+      stickGrad.addColorStop(0.3, "#8b5a2b");
+      stickGrad.addColorStop(1, "#3b220c");
+      ctx.strokeStyle = stickGrad;
+      ctx.beginPath();
+      ctx.moveTo(stickStartX, stickStartY);
+      ctx.lineTo(stickEndX, stickEndY);
+      ctx.stroke();
+
+      // White tip
+      ctx.lineWidth = 4.5;
+      ctx.strokeStyle = "#e8dcc8";
+      ctx.beginPath();
+      ctx.moveTo(stickStartX, stickStartY);
+      ctx.lineTo(stickStartX + sc * 4, stickStartY + ss * 4);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // === 🎮 Touch & Mouse Interaction ===
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height),
+      };
+    }
+
+    function onDown(e) {
+      e.preventDefault();
+      if (!allStopped() || cueBall.potted) return;
+
+      const pos = getCanvasPos(e);
+
+      // Must start touch near the cue ball (within 40px canvas)
+      const distToCue = Math.hypot(pos.x - cueBall.x, pos.y - cueBall.y);
+      if (distToCue > 45) return;
+
+      isDragging = true;
+      dragStart = { x: pos.x, y: pos.y };
+      dragCur = { x: pos.x, y: pos.y };
+
+      // Hide hint after first interaction
+      if (hintShown) {
+        hintShown = false;
+        hintEl.style.opacity = "0";
+      }
+    }
+
+    function onMove(e) {
+      e.preventDefault();
+      if (!isDragging) return;
+      dragCur = getCanvasPos(e);
+    }
+
+    function onUp(e) {
+      e.preventDefault();
+      if (!isDragging) return;
+
+      if (dragCur && !cueBall.potted) {
+        const dx = dragCur.x - cueBall.x;
+        const dy = dragCur.y - cueBall.y;
+        const dragDist = Math.hypot(dx, dy);
+
+        if (dragDist > 10) {
+          // Shoot OPPOSITE of drag direction
+          const power = Math.min(dragDist / 12, 22);
+          const shootAngle = Math.atan2(-dy, -dx);
+
+          cueBall.vx = Math.cos(shootAngle) * power;
+          cueBall.vy = Math.sin(shootAngle) * power;
+          shotsTaken++;
+          updateHUD();
+          playSound("cue_hit", power / 22);
+          triggerHaptic("medium");
+        }
+      }
+
+      isDragging = false;
+      dragStart = null;
+      dragCur = null;
+      powerFill.style.width = "0%";
+    }
+
+    // Touch events on canvas
+    canvas.addEventListener("touchstart", onDown, { passive: false });
+    canvas.addEventListener("touchmove", onMove, { passive: false });
+    canvas.addEventListener("touchend", onUp, { passive: false });
+    canvas.addEventListener("touchcancel", onUp, { passive: false });
+
+    // Mouse events for desktop testing
+    canvas.addEventListener("mousedown", onDown);
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseup", onUp);
+
+    // Rerack button — both click and touch
+    const rerackBtn = document.getElementById("btn-rerack");
+    rerackBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      initGame();
+      triggerHaptic("medium");
+    });
+    rerackBtn.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      initGame();
+      triggerHaptic("medium");
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    // === 🔄 Main Loop ===
+    function loop() {
+      // Physics substeps for stability
+      const steps = 2;
+      for (let s = 0; s < steps; s++) {
+        balls.forEach((b) => b.update());
+        resolveCollisions();
+      }
+
+      drawTable();
+      balls.forEach((b) => b.draw());
+      drawDragAim();
+
+      requestAnimationFrame(loop);
+    }
+
+    // Start
+    initGame();
+    loop();
+  </script>
+</body>
+</html>

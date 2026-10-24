@@ -1,0 +1,14 @@
+{
+    "processing_text": "`Processing, total time is based on the size of your files...`",
+    "wait_msg": "`Please wait a moment...`",
+    "err_link": "It looks like the link you sent is invalid, make sure it's a direct link and can be downloaded.",
+    "media_invalid": "Please reply to valid media.",
+    "dl_limit_exceeded": "Sorry, file too large to analyze (max 4GB). You can convert your files to link and use /mediainfo [link].",
+    "dl_args_text": "Trying to download..",
+    "mediainfo_help": "Use the command /{cmd} [link], or reply to telegram media with /{cmd}.",
+    "capt_media": "ℹ️ Your mediainfo results..\n\n**Request By:** {ment}",
+    "viweb": "💬 Open on Web",
+    "err_analyze": "Failed to analyze the file. Make sure the link is a direct media link and can be downloaded.",
+    "cancel_btn": "❌ Cancel",
+    "cancelled_text": "❌ Download cancelled."
+}
