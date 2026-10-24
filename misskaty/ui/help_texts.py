@@ -12,34 +12,36 @@
 # ------------------------------------------------------------
 #  START / HELP MENU TEXTS   ({...} wale fields code bharta hai)
 # ------------------------------------------------------------
-START_TEXT = """<emoji id=5440431182602842059>👋</emoji> Hello {user}!
-<a href='{bot_link}'>Edith</a> is the most complete Bot to help you manage your groups easily and safely!
+START_TEXT = """
+<blockquote expandable><b>💐 ɢʀєєᴛɪηɢꜱ {user} 🥀</b></blockquote>
+<b>💮 ʏσᴜ ᴧʀє ᴜꜱɪηɢ <a href='https://t.me/EdithHelpsBot'>𝐄ᴅɪᴛʜ 𝐒ᴇᴄᴜʀɪᴛʏ 𝐁ᴏᴛ 🤖</a> — ʏσᴜʀ ɢʀσᴜᴘ ᴧᴅᴠᴧηᴄєᴅ ꜱєᴄᴜʀɪᴛʏ ᴧηᴅ ᴍᴧηᴧɢєᴍєηᴛ ʙσᴛ.</b>
 
-<emoji id=6158862632926319619>👉</emoji> Add me in a Supergroup and promote me as Admin to let me get in action!
+<b>➣ <u>ɪ ᴄᴧη ʜєʟᴘ ʏσᴜ ᴡɪᴛʜ:</u></b>
+<blockquote expandable><b>⦸ 𝐀ɴᴛɪ 𝐀ʙᴜꜱᴇ & 𝐀ɴᴛɪ 𝐑ᴀɪᴅ.</b>
 
-<emoji id=5436113877181941026>❓</emoji> WHICH ARE THE COMMANDS? <emoji id=5436113877181941026>❓</emoji>
-<emoji id=5895693025874546160>🟠</emoji> Press /help to see all the commands and how they work!
-<emoji id=5956561916573782596>📄</emoji> <a href='{privacy_url}'>Privacy Policy</a>"""
+<b>♧ 𝐁ɪᴏʟɪɴᴋ 𝐏ʀᴏᴛᴇᴄᴛɪᴏɴ & 𝐋ɪɴᴋ 𝐏ʀᴏᴛᴇᴄᴛɪᴏɴ.</b>
 
-GROUP_START_TEXT = """<emoji id=5440431182602842059>👋</emoji> 𝗵𝗲𝘆! 𝗶'𝗺 𝗘𝗱𝗶𝘁𝗵
-❍ 𝘆𝗼𝘂𝗿 𝘀𝗺𝗮𝗿𝘁 𝗴𝗿𝗼𝘂𝗽 𝗺𝗮𝗻𝗮𝗴𝗲𝗿 𝗯𝗼𝘁.
+<b>♙ 𝐆ʀᴏᴜᴘ 𝐋ᴏᴄᴋ, 𝐁ᴜʟᴋ 𝐏ᴜʀɢɪɴɢ, 𝐂ᴏᴍᴍᴀɴᴅꜱ 𝐃ᴇʟᴇᴛᴇ.</b></blockquote>
 
-➻ 𝗮𝗱𝗱 𝗺𝗲 𝘁𝗼 𝘆𝗼𝘂𝗿 𝗴𝗿𝗼𝘂𝗽 & 𝗸𝗲𝗲𝗽 𝗶𝘁 𝘀𝗮𝗳𝗲 <emoji id=5017108172138087141>🛡️</emoji>"""
+<b>⇩</b> ɴєєᴅ ʜєʟᴘ? ᴜꜱє ᴛʜє ʙᴜᴛᴛᴏɴ ʙєʟᴏᴡ σʀ ꜱєηᴅ</b> /help
+"""
 
-GROUP_HELP_TEXT = """<emoji id=5231102735817918643>👇</emoji> 𝗰𝗹𝗶𝗰𝗸 𝗼𝗻 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄 𝘁𝗼 𝗴𝗲𝘁 𝗺𝘆 𝗵𝗲𝗹𝗽 𝗺𝗲𝗻𝘂 𝗶𝗻 𝘆𝗼𝘂𝗿 𝗽𝗺."""
+GROUP_START_TEXT = """<blockquote><b>👋 ʜєʏ! ɪ'ᴍ 𝐄ᴅɪᴛʜ 𝐒ᴇᴄᴜʀɪᴛʏ 𝐁ᴏᴛ 🤖</b></blockquote>
+
+<b>❍ ʏσᴜʀ ꜱᴍᴧʀᴛ ɢʀσᴜᴘ ᴍᴧηᴧɢєʀ ʙσᴛ. ᴧᴅᴅ ᴍє ᴛσ ʏσᴜʀ ɢʀσᴜᴘ & ᴋєєᴘ ɪᴛ ꜱᴧғє. 🛡️<b>
+"""
+
+GROUP_HELP_TEXT = """<blockquote><b>❖ ᴄʟɪᴄᴋ ση ᴛʜє ʙυᴛᴛση ʙєʟσᴡ ᴛσ ɢєᴛ ϻʏ ʜєʟᴘ ϻєηυ ɪη ʏσυʀ ᴘϻ. </b></blockquote>"""
 
 PRIVACY_TEXT = """<emoji id=5956561916573782596>📄</emoji> 𝗣𝗿𝗶𝘃𝗮𝗰𝘆 𝗣𝗼𝗹𝗶𝗰𝘆 𝗳𝗼𝗿 - <a href="{bot_link}">𝗘𝗗𝗜𝗧𝗛 !</a>
 𝗬𝗼𝘂𝗿 𝗽𝗿𝗶𝘃𝗮𝗰𝘆 𝗶𝘀 𝗶𝗺𝗽𝗼𝗿𝘁𝗮𝗻𝘁 𝘁𝗼 𝘂𝘀. 𝗧𝗼 𝗹𝗲𝗮𝗿𝗻 𝗺𝗼𝗿𝗲 𝗮𝗯𝗼𝘂𝘁 𝗵𝗼𝘄 𝘄𝗲 𝗰𝗼𝗹𝗹𝗲𝗰𝘁, 𝘂𝘀𝗲, 𝗮𝗻𝗱 𝗽𝗿𝗼𝘁𝗲𝗰𝘁 𝘆𝗼𝘂𝗿 𝗱𝗮𝘁𝗮, 𝗽𝗹𝗲𝗮𝘀𝗲 𝗿𝗲𝘃𝗶𝗲𝘄 𝗼𝘂𝗿 <a href="{privacy_url}">𝗣𝗿𝗶𝘃𝗮𝗰𝘆 𝗣𝗼𝗹𝗶𝗰𝘆</a>.
 𝗜𝗳 𝘆𝗼𝘂 𝗵𝗮𝘃𝗲 𝗮𝗻𝘆 𝗾𝘂𝗲𝘀𝘁𝗶𝗼𝗻𝘀 𝗼𝗿 𝗰𝗼𝗻𝗰𝗲𝗿𝗻𝘀, 𝗳𝗲𝗲𝗹 𝗳𝗿𝗲𝗲 𝘁𝗼 𝗿𝗲𝗮𝗰𝗵 𝗼𝘂𝘁 𝘁𝗼 𝗼𝘂𝗿 <a href="{support_url}">𝘀𝘂𝗽𝗽𝗼𝗿𝘁 𝘁𝗲𝗮𝗺</a>."""
 
-HELP_MENU_TEXT = """❖ 𝗰𝗵𝗼𝗼𝘀𝗲 𝘁𝗵𝗲 𝗰𝗮𝘁𝗲𝗴𝗼𝗿𝘆 𝗳𝗼𝗿 𝘄𝗵𝗶𝗰𝗵 𝘆𝗼𝘂 𝘄𝗮𝗻𝗻𝗮 𝗴𝗲𝘁 𝗵𝗲𝗹𝗽
+HELP_MENU_TEXT = """<blockquote><b>❖ ᴄʜσσsє ᴛʜє ᴄᴧᴛєɢσʀʏ ғσʀ ᴡʜɪᴄʜ ʏσυ ᴡᴧηηᴧ ɢєᴛ ʜєʟᴩ.</b></blockquote>
+<blockquote><b>➥ ᴧsᴋ ʏσυʀ ᴅσυʙᴛs ᴧᴛ <a href='{support_url}'>sυᴘᴘσʀᴛ ᴄʜᴧᴛ</a> ᴧʟʟ ᴄσϻϻᴧηᴅs ᴄᴧη ʙє υsєᴅ ᴡɪᴛʜ :</b><code> / </code></blockquote>"""
 
-➥ 𝗮𝘀𝗸 𝘆𝗼𝘂𝗿 𝗱𝗼𝘂𝗯𝘁𝘀 𝗮𝘁 <a href='{support_url}'>𝘀𝘂𝗽𝗽𝗼𝗿𝘁 𝗰𝗵𝗮𝘁</a>
-𝗮𝗹𝗹 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀 𝗰𝗮𝗻 𝗯𝗲 𝘂𝘀𝗲𝗱 𝘄𝗶𝘁𝗵 :<code>/</code>"""
-
-HELP_CATEGORY_TEXT = """❖ {category} 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀
-
-➥ 𝗮𝘀𝗸 𝘆𝗼𝘂𝗿 𝗱𝗼𝘂𝗯𝘁𝘀 𝗮𝘁 <a href='{support_url}'>𝘀𝘂𝗽𝗽𝗼𝗿𝘁 𝗰𝗵𝗮𝘁</a>"""
+HELP_CATEGORY_TEXT = """<blockquote expandable><b>❖ {category}ᴄσϻϻᴧηᴅs</b></blockquote>
+blockquote><b>➥ ᴧsᴋ ʏσυʀ ᴅσυʙᴛs ᴧᴛ <a href='{support_url}'>sυᴘᴘσʀᴛ ᴄʜᴧᴛ</a> ᴧʟʟ ᴄσϻϻᴧηᴅs ᴄᴧη ʙє υsєᴅ ᴡɪᴛʜ :</b><code> / </code></blockquote>"""
 
 HELP_NOT_FOUND_TEXT = "⚠️ 𝗵𝗲𝗹𝗽 𝗻𝗼𝘁 𝗳𝗼𝘂𝗻𝗱."
 
@@ -198,7 +200,7 @@ HELP_DOCS = {
         ],
     },
     'longmsg_help': {
-        "emoji": '📄',
+        "emoji": '📝',
         "title": 'Long Message',
         "sections": [
             ('Commands', [
@@ -300,7 +302,7 @@ HELP_DOCS = {
         ],
     },
     'anti_link_help': {
-        "emoji": '🔗',
+        "emoji": '⛓️‍💥',
         "title": 'Anti Link System',
         "sections": [
             ('Main commands', [
@@ -529,7 +531,7 @@ HELP_DOCS = {
         ],
     },
     'greetings': {
-        "emoji": '👋',
+        "emoji": '🎊',
         "title": 'Welcome System',
         "sections": [
             ('Commands', [
@@ -734,7 +736,7 @@ HELP_DOCS = {
         ],
     },
     'autoapprove_help': {
-        "emoji": '✅',
+        "emoji": '🛂',
         "title": 'Auto Approve',
         "sections": [
             ('Commands', [
@@ -841,7 +843,7 @@ HELP_DOCS = {
         ],
     },
     'karma_help': {
-        "emoji": '⭐',
+        "emoji": '🌟',
         "title": 'Karma',
         "sections": [
             ('Commands', [
@@ -933,7 +935,7 @@ HELP_DOCS = {
         ],
     },
     'mediatool_help': {
-        "emoji": '🎞️',
+        "emoji": '📺',
         "title": 'Media Tools',
         "sections": [
             ('Commands', [
@@ -1046,7 +1048,7 @@ HELP_DOCS = {
         ],
     },
     'prayer_help': {
-        "emoji": '🕌',
+        "emoji": '🛕',
         "title": 'Prayer Reminder',
         "sections": [
             ('Commands', [
@@ -1113,7 +1115,7 @@ HELP_DOCS = {
         ],
     },
     'session_help': {
-        "emoji": '🔑',
+        "emoji": '🧑‍💻',
         "title": 'Session Generator',
         "sections": [
             ('Commands', [
