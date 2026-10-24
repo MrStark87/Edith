@@ -9,8 +9,8 @@ from logging import getLogger
 LOGGER = getLogger("Edith")
 
 # ---------------------------------------------------------- Telegram core
-API_ID = 0                          # my.telegram.org se
-API_HASH = ""                       # my.telegram.org se
+API_ID = 36469348                          # my.telegram.org se
+API_HASH = "0334725d7d237fc177cb798e8b762839"                       # my.telegram.org se
 BOT_TOKEN = ""                      # @BotFather se
 USER_SESSION = None                 # optional: pyrogram session string (userbot features)
 
@@ -20,13 +20,13 @@ DATABASE_NAME = "EdithDB"           # MissKaty-side modules ka database
 EDITH_DB_NAME = "EdithGroupDB"      # Edith group-manager modules ka alag database
 
 # ---------------------------------------------------------- Owner / Sudo
-OWNER_ID = 0                        # Mister Stark ka Telegram user id
-SUDO = [OWNER_ID]                   # extra sudo users ke ids is list me daalo
+OWNER_ID = 5864182070                        # Mister Stark ka Telegram user id
+SUDO = [5864182070]                   # extra sudo users ke ids is list me daalo
 OWNER_NAME = "Mister Stark"
 BOT_DISPLAY_NAME = "Edith"
 
 # ---------------------------------------------------------- Logs / Channels
-LOG_CHANNEL = 0                     # log channel id (-100...)
+LOG_CHANNEL = -1003596436416                     # log channel id (-100...)
 LOG_GROUP_ID = None
 SUPPORT_CHAT = "CarelessxWorld"                           # username without @
 SUPPORT_GROUP = "https://t.me/CarelessxWorld"             # support group link
