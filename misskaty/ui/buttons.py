@@ -14,6 +14,7 @@ from pyrogram.types import InlineKeyboardButton
 from pyrogram.types import InlineKeyboardMarkup
 from pyrogram import enums
 from pyrogram.types import WebAppInfo
+from misskaty.vars import OWNER_ID
 
 PRIMARY = ButtonStyle.PRIMARY
 SUCCESS = ButtonStyle.SUCCESS
@@ -27,21 +28,21 @@ STYLE_MODULE = None      # help menu ke saare module buttons
 STYLE_PREV = PRIMARY     # « Prev
 STYLE_NEXT = PRIMARY     # Next »
 STYLE_BACK = DANGER      # Back
-STYLE_HOME = None        # help detail ka Home button
+STYLE_HOME = DANGER        # help detail ka Home button
 STYLE_START_ADD = None   # start: Add me
 STYLE_START_SUPPORT = None
 STYLE_START_UPDATE = None
 STYLE_START_HELP = None
 STYLE_START_STATS = None
 STYLE_GROUP = None       # group start / group help / privacy buttons
-STYLE_GAME_POOL = None   # /game: Pool button
-STYLE_GAME_SHOOTER = None  # /game, /shoot: Space Shooter button
+STYLE_GAME_POOL = SUCCESS   # /game: Pool button
+STYLE_GAME_SHOOTER = PRIMARY  # /game, /shoot: Space Shooter button
 
 # ------------------------------------------------------------
 #  HELP MENU LAYOUT  —  yaha se rows / columns badlo
 # ------------------------------------------------------------
-HELP_COLUMNS = 2         # ek row me kitne buttons
-HELP_ROWS_PER_PAGE = 10  # ek page me kitni rows (buttons per page = columns x rows)
+HELP_COLUMNS = 3         # ek row me kitne buttons
+HELP_ROWS_PER_PAGE = 4  # ek page me kitni rows (buttons per page = columns x rows)
 
 # ------------------------------------------------------------
 #  HELP MODULES  —  (button label, help key)   help key = help_texts.HELP_TEXTS ki key
@@ -159,7 +160,7 @@ def start_menu(bot_username, support_url, update_url):
             InlineKeyboardButton("System Stats 💻", callback_data="stats_callback", style=STYLE_START_STATS),
         ],
         [
-            InlineKeyboardButton("Support", url=support_url, style=STYLE_START_SUPPORT),
+            InlineKeyboardButton("Owner", url=f"tg://user?id={OWNER_ID}", style=STYLE_START_SUPPORT),
             InlineKeyboardButton("Update", url=update_url, style=STYLE_START_UPDATE),
         ],
         [InlineKeyboardButton("✙ 𝐀ᴅᴅ 𝐌є 𝐈η 𝐘συʀ 𝐆ʀσυᴘ ✙", url=f"https://t.me/{bot_username}?startgroup=true", style=PRIMARY)],   
@@ -168,20 +169,20 @@ def start_menu(bot_username, support_url, update_url):
 
 def group_start(bot_username, support_url):
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton("✙ ᴀᴅᴅ ᴍᴇ ✙", url=f"https://t.me/{bot_username}?startgroup=true", style=STYLE_GROUP),
-        InlineKeyboardButton("⌯ ꜱᴜᴘᴘᴏʀᴛ ⌯", url=support_url, style=STYLE_GROUP),
+        InlineKeyboardButton("✙ Add Me ✙", url=f"https://t.me/{bot_username}?startgroup=true", style=STYLE_GROUP),
+        InlineKeyboardButton("Support", url=support_url, style=STYLE_GROUP),
     ]])
 
 
 def group_help(bot_username, payload="help"):
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton("⌯ ʜᴇʟᴘ ᴀɴᴅ ᴄᴏᴍᴍᴀɴᴅꜱ ⌯", url=f"https://t.me/{bot_username}?start={payload}", style=STYLE_GROUP),
+        InlineKeyboardButton("Helps and Commands ❓", url=f"https://t.me/{bot_username}?start={payload}", style=STYLE_GROUP),
     ]])
 
 
 def privacy(url):
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton("⌯ ᴘʀɪᴠᴀᴄʏ ᴘᴏʟɪᴄʏ 🔏 ⌯", url=url, style=STYLE_GROUP),
+        InlineKeyboardButton("Privacy Policy", url=url, style=STYLE_GROUP),
     ]])
 
 
@@ -220,10 +221,10 @@ def help_menu(page=0):
         ])
     nav = []
     if page > 0:
-        nav.append(InlineKeyboardButton("« ᴘʀᴇᴠ", callback_data=f"help_page|{page - 1}", style=STYLE_PREV))
-    nav.append(InlineKeyboardButton("🔙 ʙᴀᴄᴋ", callback_data="back_to_start", style=STYLE_BACK))
+        nav.append(InlineKeyboardButton("«", callback_data=f"help_page|{page - 1}", style=STYLE_PREV))
+    nav.append(InlineKeyboardButton("🔙 Back", callback_data="back_to_start", style=STYLE_BACK))
     if page < len(pages) - 1:
-        nav.append(InlineKeyboardButton("ɴᴇxᴛ »", callback_data=f"help_page|{page + 1}", style=STYLE_NEXT))
+        nav.append(InlineKeyboardButton("»", callback_data=f"help_page|{page + 1}", style=STYLE_NEXT))
     rows.append(nav)
     return InlineKeyboardMarkup(rows)
 
@@ -231,8 +232,8 @@ def help_menu(page=0):
 def help_back(page=0):
     """Help detail ke neeche: Back (help menu ke usi page par) + Home."""
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data=f"help_page|{page}", style=STYLE_BACK),
-        InlineKeyboardButton("🏠 ʜᴏᴍᴇ", callback_data="back_to_start", style=STYLE_HOME),
+        InlineKeyboardButton("« Back", callback_data=f"help_page|{page}", style=STYLE_BACK),
+        InlineKeyboardButton("🏠 Home", callback_data="back_to_start", style=STYLE_HOME),
     ]])
 
 
@@ -246,8 +247,8 @@ def help_back(page=0):
 def edith_autolock__build_ampm_keyboard_1(action, hour):
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("☀️ ᴀᴍ", callback_data=f"al_ap_{action}_{hour}_AM", style=ButtonStyle.PRIMARY),
-            InlineKeyboardButton("🌙 ᴘᴍ", callback_data=f"al_ap_{action}_{hour}_PM", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("☀️ Am", callback_data=f"al_ap_{action}_{hour}_AM", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("🌙 Pm", callback_data=f"al_ap_{action}_{hour}_PM", style=ButtonStyle.PRIMARY),
         ]
     ])
 
@@ -303,18 +304,18 @@ def edith_fsub__enforce_fsub_1(link, title):
 def edith_group_commands___biolink_settings_markup_1(chat_id):
     return InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🚫 ʙᴀɴ", callback_data=f"bc_action_{chat_id}_ban", style=ButtonStyle.DANGER),
-                InlineKeyboardButton("🔇 ᴍᴜᴛᴇ", callback_data=f"bc_action_{chat_id}_mute", style=ButtonStyle.PRIMARY),
-                InlineKeyboardButton("🗑 ᴅᴇʟᴇᴛᴇ", callback_data=f"bc_action_{chat_id}_delete", style=ButtonStyle.PRIMARY),
+                InlineKeyboardButton("🚫 Ban", callback_data=f"bc_action_{chat_id}_ban", style=ButtonStyle.DANGER),
+                InlineKeyboardButton("🔇 Mute", callback_data=f"bc_action_{chat_id}_mute", style=ButtonStyle.PRIMARY),
+                InlineKeyboardButton("🗑 Delete", callback_data=f"bc_action_{chat_id}_delete", style=ButtonStyle.PRIMARY),
             ]
         ])
 
 def edith_group_commands__bioconfig_action_callback_1(action, chat_id):
     return InlineKeyboardMarkup([
                 [
-                    InlineKeyboardButton("3️⃣ 3 ᴡᴀʀɴꜱ", callback_data=f"bc_warn_{chat_id}_{action}_3", style=ButtonStyle.PRIMARY),
-                    InlineKeyboardButton("4️⃣ 4 ᴡᴀʀɴꜱ", callback_data=f"bc_warn_{chat_id}_{action}_4", style=ButtonStyle.PRIMARY),
-                    InlineKeyboardButton("5️⃣ 5 ᴡᴀʀɴꜱ", callback_data=f"bc_warn_{chat_id}_{action}_5", style=ButtonStyle.PRIMARY),
+                    InlineKeyboardButton("3️⃣ 3 Warns", callback_data=f"bc_warn_{chat_id}_{action}_3", style=ButtonStyle.PRIMARY),
+                    InlineKeyboardButton("4️⃣ 4 Warns", callback_data=f"bc_warn_{chat_id}_{action}_4", style=ButtonStyle.PRIMARY),
+                    InlineKeyboardButton("5️⃣ 5 Warns", callback_data=f"bc_warn_{chat_id}_{action}_5", style=ButtonStyle.PRIMARY),
                 ],
                 [InlineKeyboardButton("🔙 ʙᴀᴄᴋ", callback_data=f"bc_back_{chat_id}", style=ButtonStyle.PRIMARY)]
             ])
@@ -325,13 +326,13 @@ def edith_joinrequest__handle_join_request_1(chat_id, user):
     return InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton(
-                        "ᴀᴘᴘʀᴏᴠᴇ",
+                        "Approve",
                         callback_data=(
                             f"jr_approve:{chat_id}:{user.id}"
                         )
                     ),
                     InlineKeyboardButton(
-                        "ᴅᴇᴄʟɪɴᴇ",
+                        "Decline",
                         callback_data=(
                             f"jr_decline:{chat_id}:{user.id}"
                         )
@@ -349,25 +350,25 @@ def edith_welcome___build_markup_1(buttons):
 def edith_welcome___send_panel_1(user_id):
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("📄 ᴛᴇxᴛ",        callback_data=f"ws_text_{user_id}", style=ButtonStyle.PRIMARY),
-            InlineKeyboardButton("📸 ᴍᴇᴅɪᴀ",       callback_data=f"ws_media_{user_id}", style=ButtonStyle.PRIMARY),
-            InlineKeyboardButton("🔘 ʙᴜᴛᴛᴏɴꜱ", callback_data=f"ws_urlbtn_{user_id}", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("📄 Text",        callback_data=f"ws_text_{user_id}", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("📸 Media",       callback_data=f"ws_media_{user_id}", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("🔘 Buttons", callback_data=f"ws_urlbtn_{user_id}", style=ButtonStyle.PRIMARY),
         ],
         [
-            InlineKeyboardButton("🕵️ ᴘʀᴇᴠɪᴇᴡ", callback_data=f"ws_preview_{user_id}", style=ButtonStyle.PRIMARY),
-            InlineKeyboardButton("💾 ꜱᴀᴠᴇ",    callback_data=f"ws_save_{user_id}", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("🕵️ Preview", callback_data=f"ws_preview_{user_id}", style=ButtonStyle.PRIMARY),
+            InlineKeyboardButton("💾 Save",    callback_data=f"ws_save_{user_id}", style=ButtonStyle.PRIMARY),
         ],
-        [InlineKeyboardButton("🚮 ᴄʟᴇᴀʀ ᴀʟʟ", callback_data=f"ws_clear_{user_id}", style=ButtonStyle.PRIMARY)]
+        [InlineKeyboardButton("🚮 Clear All", callback_data=f"ws_clear_{user_id}", style=ButtonStyle.PRIMARY)]
     ])
 
 def edith_welcome__welcome_toggle_1(deep_link):
     return InlineKeyboardMarkup([
-                    [InlineKeyboardButton("⚙️ ꜱᴇᴛ ʏᴏᴜʀ ᴡᴇʟᴄᴏᴍᴇ", url=deep_link, style=ButtonStyle.PRIMARY)]
+                    [InlineKeyboardButton("⚙️ Set Welcome", url=deep_link, style=ButtonStyle.PRIMARY)]
                 ])
 
 def edith_welcome__setwelcome_group_1(deep_link):
     return InlineKeyboardMarkup([
-                [InlineKeyboardButton("ꜱᴇᴛ ʏᴏᴜʀ ᴡᴇʟᴄᴏᴍᴇ ɪɴ ᴘᴍ", url=deep_link, style=ButtonStyle.PRIMARY)]
+                [InlineKeyboardButton("Set Welcome in Pm", url=deep_link, style=ButtonStyle.PRIMARY)]
             ])
 
 
@@ -445,7 +446,7 @@ def copy_forward__copymsg_1(BOT_USERNAME):
                     [
                         [
                             InlineKeyboardButton(
-                                text="💬 Chat Aku Yahh",
+                                text="💬 Chat Me Yeah",
                                 url=f"https://t.me/{BOT_USERNAME}",
                             )
                         ]
@@ -457,7 +458,7 @@ def copy_forward__forwardmsg_1(BOT_USERNAME):
                     [
                         [
                             InlineKeyboardButton(
-                                text="💬 Chat Aku Yahh",
+                                text="💬 Chat Me Yeah",
                                 url=f"https://t.me/{BOT_USERNAME}",
                             )
                         ]
@@ -583,11 +584,11 @@ def fun__batu_gunting_kertas_1(game_id):
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("🪨 Batu", callback_data=f"rps:{game_id}:batu", style=enums.ButtonStyle.PRIMARY),
-                InlineKeyboardButton("✂️ Gunting", callback_data=f"rps:{game_id}:gunting", style=enums.ButtonStyle.PRIMARY),
-                InlineKeyboardButton("📄 Kertas", callback_data=f"rps:{game_id}:kertas", style=enums.ButtonStyle.PRIMARY),
+                InlineKeyboardButton("🪨 Rock", callback_data=f"rps:{game_id}:batu", style=enums.ButtonStyle.PRIMARY),
+                InlineKeyboardButton("✂️ Scissors", callback_data=f"rps:{game_id}:gunting", style=enums.ButtonStyle.PRIMARY),
+                InlineKeyboardButton("📄 Paper", callback_data=f"rps:{game_id}:kertas", style=enums.ButtonStyle.PRIMARY),
             ],
-            [InlineKeyboardButton("❌ Batalkan", callback_data=f"rps:{game_id}:stop", style=enums.ButtonStyle.DANGER)],
+            [InlineKeyboardButton("❌ Cancel", callback_data=f"rps:{game_id}:stop", style=enums.ButtonStyle.DANGER)],
         ]
     )
 
@@ -595,7 +596,7 @@ def fun__build_tebak_angka_keyboard_1(game_id, nomor):
     return InlineKeyboardButton(str(nomor), callback_data=f"ga:{game_id}:{nomor}")
 
 def fun__build_tebak_angka_keyboard_2(game_id):
-    return InlineKeyboardButton("🛑 Berhenti", callback_data=f"ga:{game_id}:stop", style=enums.ButtonStyle.DANGER)
+    return InlineKeyboardButton("🛑 Stop", callback_data=f"ga:{game_id}:stop", style=enums.ButtonStyle.DANGER)
 
 
 # ---- plugins/grup_tools.py -------------------------------
