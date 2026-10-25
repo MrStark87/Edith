@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from cachetools import TTLCache
 from pyrogram.errors import ChannelPrivate, PeerIdInvalid
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
@@ -21,12 +22,16 @@ async def ban_reply(_, ctx: Message):
         await ctx.stop_propagation()
 
 
+_chat_known = TTLCache(maxsize=4096, ttl=300)  # chat DB me hai (DB hit bachane ke liye)
+_chat_row = TTLCache(maxsize=4096, ttl=30)
+
+
 @app.on_message(filters.group & filters.incoming, group=-2)
 @use_chat_lang()
 async def grp_bd(self: Client, ctx: Message, strings):
     if not ctx.from_user:
         return
-    if not await db.is_chat_exist(ctx.chat.id):
+    if ctx.chat.id not in _chat_known and not await db.is_chat_exist(ctx.chat.id):
         try:
             total = await self.get_chat_members_count(ctx.chat.id)
         except ChannelPrivate:
@@ -39,7 +44,10 @@ async def grp_bd(self: Client, ctx: Message, strings):
             ),
         )
         await db.add_chat(ctx.chat.id, ctx.chat.title)
-    chck = await db.get_chat(ctx.chat.id)
+    _chat_known[ctx.chat.id] = True
+    chck = _chat_row.get(ctx.chat.id)
+    if chck is None:
+        chck = _chat_row[ctx.chat.id] = await db.get_chat(ctx.chat.id)
     if chck["is_disabled"]:
         buttons = [
             [UIB.ban_user_or_chat__grp_bd_1(SUPPORT_CHAT=SUPPORT_CHAT)]
@@ -181,3 +189,4 @@ async def re_enable_chat(_, ctx: Message):
         return await ctx.reply("This chat is not yet disabled.")
     await db.re_enable_chat(chat_)
     await ctx.reply("Chat Succesfully re-enabled")
+        
