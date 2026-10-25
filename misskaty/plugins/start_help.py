@@ -8,6 +8,8 @@ import contextlib
 import html
 import re
 
+from cachetools import TTLCache
+
 from pyrogram import enums, filters
 from pyrogram.enums import ChatMemberStatus
 from pyrogram.errors import QueryIdInvalid
@@ -247,9 +249,13 @@ async def privacy_cmd(_, message: Message):
 
 
 # ------------------------------------------------------------ chat tracking (for /stats)
+_tracked = TTLCache(maxsize=4096, ttl=600)  # har chat ko 10 min me sirf ek baar DB me likho
+
+
 @app.on_message(filters.group & ~filters.service, group=10)
 async def track_group(_, message: Message):
-    if message.chat:
+    if message.chat and message.chat.id not in _tracked:
+        _tracked[message.chat.id] = True
         with contextlib.suppress(Exception):
             await edith_db.add_chat(message.chat.id, message.chat.title or "")
 
@@ -299,3 +305,4 @@ async def cb_stats(_, cq: CallbackQuery):
     text = await bot_sys_stats()
     with contextlib.suppress(QueryIdInvalid):
         await app.answer_callback_query(cq.id, text, show_alert=True)
+        
