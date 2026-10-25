@@ -28,7 +28,7 @@ STYLE_MODULE = None      # help menu ke saare module buttons
 STYLE_PREV = PRIMARY     # « Prev
 STYLE_NEXT = PRIMARY     # Next »
 STYLE_BACK = DANGER      # Back
-STYLE_HOME = DANGER        # help detail ka Home button
+STYLE_HOME = PRIMARY        # help detail ka Home button
 STYLE_START_ADD = None   # start: Add me
 STYLE_START_SUPPORT = None
 STYLE_START_UPDATE = None
@@ -159,7 +159,7 @@ def start_menu(bot_username, support_url, update_url):
             InlineKeyboardButton("System Stats 💻", callback_data="stats_callback", style=STYLE_START_STATS),
         ],
         [
-            InlineKeyboardButton("Owner", url=f"tg://user?id={OWNER_ID}", style=STYLE_START_SUPPORT),
+            InlineKeyboardButton("Owner", url=f"https://t.me/CarelessxCoder", style=STYLE_START_SUPPORT),
             InlineKeyboardButton("Update", url=update_url, style=STYLE_START_UPDATE),
         ],
         [InlineKeyboardButton("✙ 𝐀ᴅᴅ 𝐌є 𝐈η 𝐘συʀ 𝐆ʀσυᴘ ✙", url=f"https://t.me/{bot_username}?startgroup=true", style=PRIMARY)],   
