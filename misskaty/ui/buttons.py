@@ -124,7 +124,6 @@ HELP_MODULES = [
     ("Stickers", "stickers_help"),
     ("Quotly", "quotly_help"),
     ("Movie Scraper", "scraper_help"),
-    ("Prayer", "prayer_help"),
 
     # ---- Fun
     ("Fun", "fun_help"),
