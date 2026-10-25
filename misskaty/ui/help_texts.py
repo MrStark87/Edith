@@ -15,6 +15,7 @@
 START_TEXT = """
 <blockquote expandable><b>💐 Greetings {user} 🥀</b></blockquote>
 My name is Edith 🤖. I'm a bot with some useful features.
+
 <b>⇩</b> Need help? Use the button below or send /help
 """
 
@@ -29,9 +30,8 @@ PRIVACY_TEXT = """<emoji id=5956561916573782596>📄</emoji> <b>Privacy Policy f
 Your privacy is important to us. To learn more about how we collect, use, and protect your data, please review our <a href="{privacy_url}">Privacy Policy</a>.
 If you have any questions or concerns, feel free to reach out to our <a href="{support_url}">support team</a>."""
 
-HELP_MENU_TEXT = """<blockquote expandable><b>❖ Choose a module to get its commands and usage</b><blockquote expandable>
-<b>➥ Ask your doubts at <a href='{support_url}'>support chat</a></b>
-All commands can be used with : <code>/</code>"""
+HELP_MENU_TEXT = """<blockquote expandable><b>❖ Choose a module to get its commands and usage</b></blockquote>
+<b>➥ Ask your doubts at <a href='{support_url}'>support chat</a> All commands can be used with : <code>/</code></b>"""
 
 HELP_CATEGORY_TEXT = """<b>❖ {category} commands</b>
 
