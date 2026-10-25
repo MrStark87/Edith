@@ -506,7 +506,7 @@ async def get_ai_status(chat_id: int) -> bool:
     data = await db.ai.find_one({"chat_id": chat_id})
     return bool(data.get("enabled", False)) if data else False
 
-# ==========================================================
+# =================================================
 # 🚷 Blacklisted Users (original)
 # ==========================================================
 
@@ -825,3 +825,55 @@ async def is_approved(chat_id: int, user_id: int) -> bool:
 async def get_approved_users(chat_id: int) -> list:
     data = await db.approved.find_one({"chat_id": chat_id})
     return data.get("users", []) if data else []
+
+
+# ============================================================
+#  SPEED: chhota read-cache (auto)
+#  get_* / is_* functions ka result 10 sec yaad rakhta hai, aur koi bhi
+#  write (set/add/remove/...) hote hi poora cache saaf ho jaata hai.
+#  Isse har group message par hone wale DB round-trips bahut kam ho jaate hain.
+# ============================================================
+import copy as _copy
+import functools as _functools
+import inspect as _inspect
+import time as _time
+
+_READ_TTL = 10
+_read_cache = {}
+
+
+def _wrap_read(fn):
+    @_functools.wraps(fn)
+    async def inner(*args, **kwargs):
+        key = (fn.__name__, repr(args), repr(sorted(kwargs.items())))
+        hit = _read_cache.get(key)
+        now = _time.monotonic()
+        if hit and hit[0] > now:
+            return _copy.deepcopy(hit[1])
+        result = await fn(*args, **kwargs)
+        if len(_read_cache) > 5000:
+            _read_cache.clear()
+        _read_cache[key] = (now + _READ_TTL, _copy.deepcopy(result))
+        return result
+
+    return inner
+
+
+def _wrap_write(fn):
+    @_functools.wraps(fn)
+    async def inner(*args, **kwargs):
+        try:
+            return await fn(*args, **kwargs)
+        finally:
+            _read_cache.clear()
+
+    return inner
+
+
+for _name, _fn in list(globals().items()):
+    if _name.startswith("_") or not _inspect.iscoroutinefunction(_fn) or _fn.__module__ != __name__:
+        continue
+    if _name == "is_approved":  # iska apna cache hai
+        continue
+    globals()[_name] = _wrap_read(_fn) if _name.startswith(("get_", "is_")) else _wrap_write(_fn)
+    
