@@ -12,36 +12,41 @@
 # ------------------------------------------------------------
 #  START / HELP MENU TEXTS   ({...} wale fields code bharta hai)
 # ------------------------------------------------------------
-START_TEXT = """<emoji id=5440431182602842059>👋</emoji> Hello {user}!
-<a href='{bot_link}'>Edith</a> is the most complete Bot to help you manage your groups easily and safely!
+START_TEXT = """
+<blockquote expandable><b>💐 ɢʀєєᴛɪηɢꜱ {user} 🥀</b></blockquote>
+<b>💮 ʏσᴜ ᴧʀє ᴜꜱɪηɢ <a href='{bot_link}'>𝐄ᴅɪᴛʜ 𝐒ᴇᴄᴜʀɪᴛʏ 𝐁ᴏᴛ 🤖</a> — ʏσᴜʀ ɢʀσᴜᴘ ᴧᴅᴠᴧηᴄєᴅ ꜱєᴄᴜʀɪᴛʏ ᴧηᴅ ᴍᴧηᴧɢєᴍєηᴛ ʙσᴛ.</b>
 
-<emoji id=6158862632926319619>👉</emoji> Add me in a Supergroup and promote me as Admin to let me get in action!
+<b>➣ <u>ɪ ᴄᴧη ʜєʟᴘ ʏσᴜ ᴡɪᴛʜ:</u></b>
+<blockquote expandable><b>⦸ 𝐀ɴᴛɪ 𝐀ʙᴜꜱᴇ & 𝐀ɴᴛɪ 𝐑ᴀɪᴅ.</b>
 
-<emoji id=5436113877181941026>❓</emoji> WHICH ARE THE COMMANDS? <emoji id=5436113877181941026>❓</emoji>
-<emoji id=5895693025874546160>🟠</emoji> Press /help to see all the commands and how they work!
-<emoji id=5956561916573782596>📄</emoji> <a href='{privacy_url}'>Privacy Policy</a>"""
+<b>♧ 𝐁ɪᴏʟɪɴᴋ 𝐏ʀᴏᴛᴇᴄᴛɪᴏɴ & 𝐋ɪɴᴋ 𝐏ʀᴏᴛᴇᴄᴛɪᴏɴ.</b>
 
-GROUP_START_TEXT = """<emoji id=5440431182602842059>👋</emoji> 𝗵𝗲𝘆! 𝗶'𝗺 𝗘𝗱𝗶𝘁𝗵
-❍ 𝘆𝗼𝘂𝗿 𝘀𝗺𝗮𝗿𝘁 𝗴𝗿𝗼𝘂𝗽 𝗺𝗮𝗻𝗮𝗴𝗲𝗿 𝗯𝗼𝘁.
+<b>♙ 𝐆ʀᴏᴜᴘ 𝐋ᴏᴄᴋ, 𝐁ᴜʟᴋ 𝐏ᴜʀɢɪɴɢ, 𝐂ᴏᴍᴍᴀɴᴅꜱ 𝐃ᴇʟᴇᴛᴇ.</b></blockquote>
 
-➻ 𝗮𝗱𝗱 𝗺𝗲 𝘁𝗼 𝘆𝗼𝘂𝗿 𝗴𝗿𝗼𝘂𝗽 & 𝗸𝗲𝗲𝗽 𝗶𝘁 𝘀𝗮𝗳𝗲 <emoji id=5017108172138087141>🛡️</emoji>"""
+<b>⇩</b> ɴєєᴅ ʜєʟᴘ? ᴜꜱє ᴛʜє ʙᴜᴛᴛᴏɴ ʙєʟᴏᴡ σʀ ꜱєηᴅ /help
+"""
 
-GROUP_HELP_TEXT = """<emoji id=5231102735817918643>👇</emoji> 𝗰𝗹𝗶𝗰𝗸 𝗼𝗻 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄 𝘁𝗼 𝗴𝗲𝘁 𝗺𝘆 𝗵𝗲𝗹𝗽 𝗺𝗲𝗻𝘂 𝗶𝗻 𝘆𝗼𝘂𝗿 𝗽𝗺."""
+GROUP_START_TEXT = """<emoji id=5440431182602842059>👋</emoji> <b>𝐇ᴇʏ! 𝐈'ᴍ 𝐄ᴅɪᴛʜ</b>
+<b>❍ 𝐘ᴏᴜʀ ꜱᴍᴧʀᴛ ɢʀσᴜᴘ ᴍᴧηᴧɢєʀ ʙσᴛ.</b>
 
-PRIVACY_TEXT = """<emoji id=5956561916573782596>📄</emoji> 𝗣𝗿𝗶𝘃𝗮𝗰𝘆 𝗣𝗼𝗹𝗶𝗰𝘆 𝗳𝗼𝗿 - <a href="{bot_link}">𝗘𝗗𝗜𝗧𝗛 !</a>
-𝗬𝗼𝘂𝗿 𝗽𝗿𝗶𝘃𝗮𝗰𝘆 𝗶𝘀 𝗶𝗺𝗽𝗼𝗿𝘁𝗮𝗻𝘁 𝘁𝗼 𝘂𝘀. 𝗧𝗼 𝗹𝗲𝗮𝗿𝗻 𝗺𝗼𝗿𝗲 𝗮𝗯𝗼𝘂𝘁 𝗵𝗼𝘄 𝘄𝗲 𝗰𝗼𝗹𝗹𝗲𝗰𝘁, 𝘂𝘀𝗲, 𝗮𝗻𝗱 𝗽𝗿𝗼𝘁𝗲𝗰𝘁 𝘆𝗼𝘂𝗿 𝗱𝗮𝘁𝗮, 𝗽𝗹𝗲𝗮𝘀𝗲 𝗿𝗲𝘃𝗶𝗲𝘄 𝗼𝘂𝗿 <a href="{privacy_url}">𝗣𝗿𝗶𝘃𝗮𝗰𝘆 𝗣𝗼𝗹𝗶𝗰𝘆</a>.
-𝗜𝗳 𝘆𝗼𝘂 𝗵𝗮𝘃𝗲 𝗮𝗻𝘆 𝗾𝘂𝗲𝘀𝘁𝗶𝗼𝗻𝘀 𝗼𝗿 𝗰𝗼𝗻𝗰𝗲𝗿𝗻𝘀, 𝗳𝗲𝗲𝗹 𝗳𝗿𝗲𝗲 𝘁𝗼 𝗿𝗲𝗮𝗰𝗵 𝗼𝘂𝘁 𝘁𝗼 𝗼𝘂𝗿 <a href="{support_url}">𝘀𝘂𝗽𝗽𝗼𝗿𝘁 𝘁𝗲𝗮𝗺</a>."""
+<b>➻ 𝐀ᴅᴅ ᴍє ᴛσ ʏσᴜʀ ɢʀσᴜᴘ ᴧηᴅ ᴋєєᴘ ɪᴛ ꜱᴧꜰє</b> <emoji id=5017108172138087141>🛡️</emoji>"""
 
-HELP_MENU_TEXT = """❖ 𝗰𝗵𝗼𝗼𝘀𝗲 𝘁𝗵𝗲 𝗰𝗮𝘁𝗲𝗴𝗼𝗿𝘆 𝗳𝗼𝗿 𝘄𝗵𝗶𝗰𝗵 𝘆𝗼𝘂 𝘄𝗮𝗻𝗻𝗮 𝗴𝗲𝘁 𝗵𝗲𝗹𝗽
+GROUP_HELP_TEXT = """<emoji id=5231102735817918643>👇</emoji> <b>𝐂ʟɪᴄᴋ ση ᴛʜє ʙᴜᴛᴛση ʙєʟσᴡ ᴛσ ɢєᴛ ᴍʏ ʜєʟᴘ ᴍєηᴜ ɪη ʏσᴜʀ 𝐏𝐌.</b>"""
 
-➥ 𝗮𝘀𝗸 𝘆𝗼𝘂𝗿 𝗱𝗼𝘂𝗯𝘁𝘀 𝗮𝘁 <a href='{support_url}'>𝘀𝘂𝗽𝗽𝗼𝗿𝘁 𝗰𝗵𝗮𝘁</a>
-𝗮𝗹𝗹 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀 𝗰𝗮𝗻 𝗯𝗲 𝘂𝘀𝗲𝗱 𝘄𝗶𝘁𝗵 :<code>/</code>"""
+PRIVACY_TEXT = """<emoji id=5956561916573782596>📄</emoji> <b>𝐏ʀɪᴠᴀᴄʏ 𝐏ᴏʟɪᴄʏ ꜰσʀ - <a href="{bot_link}">𝐄𝐃𝐈𝐓𝐇</a></b>
+<b>𝐘ᴏᴜʀ ᴘʀɪᴠᴧᴄʏ ɪꜱ ɪᴍᴘσʀᴛᴧηᴛ ᴛσ ᴜꜱ. 𝐓ᴏ ʟєᴧʀη ᴍσʀє ᴧʙσᴜᴛ ʜσᴡ ᴡє ᴄσʟʟєᴄᴛ, ᴜꜱє, ᴧηᴅ ᴘʀσᴛєᴄᴛ ʏσᴜʀ ᴅᴧᴛᴧ, ᴘʟєᴧꜱє ʀєᴠɪєᴡ σᴜʀ <a href="{privacy_url}">𝐏ʀɪᴠᴀᴄʏ 𝐏ᴏʟɪᴄʏ</a>.</b>
+<b>𝐈ꜰ ʏσᴜ ʜᴧᴠє ᴧηʏ ǫᴜєꜱᴛɪσηꜱ σʀ ᴄσηᴄєʀηꜱ, ꜰєєʟ ꜰʀєє ᴛσ ʀєᴧᴄʜ σᴜᴛ ᴛσ σᴜʀ <a href="{support_url}">ꜱᴜᴘᴘσʀᴛ ᴛєᴧᴍ</a>.</b>"""
 
-HELP_CATEGORY_TEXT = """❖ {category} 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀
+HELP_MENU_TEXT = """<b>❖ 𝐂ʜᴏᴏꜱᴇ ᴛʜє ᴄᴧᴛєɢσʀʏ ꜰσʀ ᴡʜɪᴄʜ ʏσᴜ ᴡᴧηηᴧ ɢєᴛ ʜєʟᴘ</b>
 
-➥ 𝗮𝘀𝗸 𝘆𝗼𝘂𝗿 𝗱𝗼𝘂𝗯𝘁𝘀 𝗮𝘁 <a href='{support_url}'>𝘀𝘂𝗽𝗽𝗼𝗿𝘁 𝗰𝗵𝗮𝘁</a>"""
+<b>➥ 𝐀ꜱᴋ ʏσᴜʀ ᴅσᴜʙᴛꜱ ᴧᴛ <a href='{support_url}'>ꜱᴜᴘᴘσʀᴛ ᴄʜᴧᴛ</a></b>
+<b>𝐀ʟʟ ᴄσᴍᴍᴧηᴅꜱ ᴄᴧη ʙє ᴜꜱєᴅ ᴡɪᴛʜ</b> : <code>/</code>"""
 
-HELP_NOT_FOUND_TEXT = "⚠️ 𝗵𝗲𝗹𝗽 𝗻𝗼𝘁 𝗳𝗼𝘂𝗻𝗱."
+HELP_CATEGORY_TEXT = """<b>❖ {category} ᴄσᴍᴍᴧηᴅꜱ</b>
+
+<b>➥ 𝐀ꜱᴋ ʏσᴜʀ ᴅσᴜʙᴛꜱ ᴧᴛ <a href='{support_url}'>ꜱᴜᴘᴘσʀᴛ ᴄʜᴧᴛ</a></b>"""
+
+HELP_NOT_FOUND_TEXT = """⚠️ <b>𝐇ᴇʟᴘ ησᴛ ꜰσᴜηᴅ.</b>"""
 
 
 # ------------------------------------------------------------
@@ -1182,20 +1187,44 @@ HELP_DOCS = {
             ]),
         ],
     },
-}
-
 
 # ============================================================
 #  NEECHE KA CODE MAT BADLO  (docs -> table / plain text builder)
 # ============================================================
 import html as _html
+import re as _re
 
-_BOLD = {chr(97 + i): chr(0x1D5EE + i) for i in range(26)}
-_BOLD.update({chr(65 + i): chr(0x1D5EE + i) for i in range(26)})
+# ---- font converter: plain English -> Edith font (small caps + bold capitals) ----
+_SC = dict(zip("abcdefghijklmnopqrstuvwxyz", "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ"))
+_VA = dict(_SC)
+_VA.update({"a": "ᴧ", "e": "є", "n": "η", "o": "σ"})
+_SKIP = _re.compile(r"[{}\[\]*_~|=/@\\#<>]|\d|://")
+_TOK = _re.compile(r"(<[^>]+>|\{[^}]*\}|&[a-zA-Z]+;|\S+|\s+)")
 
 
-def _sb(s: str) -> str:
-    return "".join(_BOLD.get(c, c) for c in s)
+def _word(w: str) -> str:
+    title = w[0].isupper()
+    out = []
+    for c in w:
+        if c.isascii() and c.isalpha():
+            if c.isupper():
+                out.append(chr(0x1D400 + ord(c) - 65))
+            else:
+                out.append((_SC if title else _VA)[c])
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+def _fancy(text: str) -> str:
+    """Commands / placeholders / links / numbers jaisa technical text as-it-is rehta hai."""
+    res = []
+    for tok in _TOK.findall(text):
+        if tok.startswith(("<", "{", "&")) or tok.isspace() or _SKIP.search(tok):
+            res.append(tok)
+        else:
+            res.append(_re.sub(r"[A-Za-z]+", lambda m: _word(m.group(0)), tok))
+    return "".join(res)
 
 
 def _esc(s: str) -> str:
@@ -1206,19 +1235,23 @@ def _is_cmd(s: str) -> bool:
     return s.startswith(("/", "!", "@", "#", "~", ".", "-"))
 
 
+def _fe(s: str) -> str:
+    return _fancy(_esc(s))
+
+
 def _build_plain(doc: dict) -> str:
     """Edith box format + <blockquote expandable> (handlers aur fallback ke liye)."""
-    head = "╔══════════════════╗\n   %s %s\n╚══════════════════╝\n" % (doc["emoji"], _sb(_esc(doc["title"].lower())))
+    head = "╔══════════════════╗\n   %s <b>%s</b>\n╚══════════════════╝\n" % (doc["emoji"], _fe(doc["title"]))
     body = []
     for name, rows in doc["sections"]:
-        body.append("❖ %s ❖\n" % _sb(_esc(name.lower())))
+        body.append("<b>❖ %s ❖</b>\n" % _fe(name))
         for left, right in rows:
             if left == "•":
-                body.append("➻ %s" % _sb(_esc(right.lower())))
+                body.append("➻ <b>%s</b>" % _fe(right))
             elif _is_cmd(left):
-                body.append("➻ %s%s" % (_esc(left), (" — " + _sb(_esc(right.lower()))) if right else ""))
+                body.append("➻ %s%s" % (_esc(left), (" — <b>" + _fe(right) + "</b>") if right else ""))
             else:
-                body.append("➻ %s%s" % (_sb(_esc(left.lower())), (": " + _sb(_esc(right.lower()))) if right else ""))
+                body.append("➻ <b>%s</b>%s" % (_fe(left), (": <b>" + _fe(right) + "</b>") if right else ""))
         body.append("")
     return head + "<blockquote expandable>" + "\n".join(body).strip("\n") + "</blockquote>"
 
@@ -1227,17 +1260,18 @@ def _build_table(doc: dict) -> str:
     """Rich message HTML table (Command | Description)."""
     tables = []
     for idx, (name, rows) in enumerate(doc["sections"]):
-        cap = "%s %s" % (doc["emoji"], _esc(doc["title"])) if idx == 0 else ""
-        cap = (cap + " — " if cap else "") + _esc(name) if (idx == 0 and name.lower() not in ("commands", "info")) else (cap or _esc(name))
+        cap = "%s %s" % (doc["emoji"], _fe(doc["title"])) if idx == 0 else ""
+        cap = (cap + " — " if cap else "") + _fe(name) if (idx == 0 and name.lower() not in ("commands", "info")) else (cap or _fe(name))
         cmdlike = sum(1 for l, _ in rows if _is_cmd(l)) >= max(1, len(rows) // 2)
-        th = ("Command", "Description") if cmdlike else ("Item", "Details")
+        th = (_fancy("Command"), _fancy("Description")) if cmdlike else (_fancy("Item"), _fancy("Details"))
+        raw = name.lower() == "languages"  # identifiers as-is
         trs = []
         for left, right in rows:
             if left == "•":
-                lcell, rcell = "•", _esc(right)
+                lcell, rcell = "•", (_esc(right) if raw else _fe(right))
             else:
-                lcell = "<code>%s</code>" % _esc(left) if _is_cmd(left) else _esc(left)
-                rcell = _esc(right) if right else "—"
+                lcell = "<code>%s</code>" % _esc(left) if _is_cmd(left) else (_esc(left) if raw else _fe(left))
+                rcell = (_esc(right) if raw else _fe(right)) if right else "—"
             trs.append("<tr><td>%s</td><td>%s</td></tr>" % (lcell, rcell))
         tables.append(
             "<table bordered striped>\n<caption>%s</caption>\n<tr><th>%s</th><th>%s</th></tr>\n%s\n</table>"
