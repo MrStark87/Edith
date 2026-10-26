@@ -1227,3 +1227,6 @@ def ytdl_plugins__ytdl_pick_step_3(cache_key, label, opt):
 def ytdl_plugins__ytdl_pick_step_4(cache_key, idx, label, res):
     return InlineKeyboardButton(label, callback_data=f"yt_dl|{cache_key}|v|{res}|{idx}")
 
+def bypass_open(link):
+    """/directurl result ke neeche 'Open Link' button."""
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🔗 ᴏᴘᴇɴ ʟɪɴᴋ", url=link, style=STYLE_GROUP)]])
