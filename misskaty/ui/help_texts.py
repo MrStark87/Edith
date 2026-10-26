@@ -888,10 +888,14 @@ HELP_DOCS = {
     },
     'ocr_help': {
         "emoji": '🔍',
-        "title": 'Ocr',
+        "title": 'OCR',
         "sections": [
             ('Commands', [
-                ('/ocr [reply to photo]', 'Read text from image'),
+                ('/ocr', 'Reply to a photo, sticker or image to read the text in it'),
+                ('/ocr [lang]', 'Choose the language, for example /ocr hin (default: eng)'),
+            ]),
+            ('Setup', [
+                ('OCR_SPACE_API_KEY', 'Free key from ocr.space, set in misskaty/vars.py'),
             ]),
         ],
     },
@@ -1162,13 +1166,23 @@ HELP_DOCS = {
     },
     'bypass_help': {
         "emoji": '🔗',
-        "title": 'Bypass',
+        "title": 'URL Bypass',
         "sections": [
             ('Commands', [
-                ('/directurl [link]', 'Bypass url (deprecated)'),
+                ('/directurl [link]', 'Resolve a link to its final / direct download link'),
+                ('/bypass [link]', 'Same as /directurl (you can also reply to a message with a link)'),
+            ]),
+            ('Supported', [
+                ('Short links', 'bit.ly, tinyurl, we.tl and other redirects'),
+                ('Google Drive', 'Converted to a direct download link'),
+                ('Dropbox', 'Converted to a direct download link'),
+                ('GitHub', 'File page converted to the raw file link'),
+                ('MediaFire', 'Direct link extracted from the page'),
+                ('Pling / WeTransfer', 'Best effort (these sites change often)'),
             ]),
         ],
     },
+Ye teeno change
     'currency_help': {
         "emoji": '💱',
         "title": 'Currency',
