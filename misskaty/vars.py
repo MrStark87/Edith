@@ -56,7 +56,9 @@ GROK_BASE_URL = "https://api.groq.com/openai/v1"
 
 # ---------------------------------------------------------- Optional keys
 CURRENCY_API = None
-
+# ---------------------------------------------------------- OCR (/ocr) — OCR.space
+# "helloworld" demo key hai (limited). Apni free key https://ocr.space/ocrapi/freekey se lo.
+OCR_SPACE_API_KEY = "helloworld"
 # ---------------------------------------------------------- Payments (optional, Paydisini)
 PAYDISINI_KEY = None
 PAYDISINI_CHANNEL_ID = "17"
